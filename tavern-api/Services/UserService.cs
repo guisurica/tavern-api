@@ -26,21 +26,21 @@ public sealed class UserService : IUserService
         {
             var userFound = await _userRepository.GetById(id);
             if (userFound == null)
-                return new Result<string>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<string>().Failure("Usuário não encontrado", null, 404);
 
             userFound.ChangeUsername(input.NewUsername);
 
             await _userRepository.UpdateAsync(userFound);
 
-            return new Result<string>().Success("Nome de usuário atualizado com sucesso.", string.Empty, System.Net.HttpStatusCode.OK);
+            return new Result<string>().Success("Nome de usuário atualizado com sucesso.", string.Empty, 200);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<string>().Failure(ex.Message, null, 500);
         }
         catch (DomainException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<string>().Failure(ex.Message, null, 400);
         }
     }
 
@@ -50,7 +50,7 @@ public sealed class UserService : IUserService
         {
             var userAlreadyExists = await _userRepository.GetByEmailAsync(input.Email);
             if (userAlreadyExists != null) 
-                return new Result<UserDTO>().Failure("Email já cadastrado", null, System.Net.HttpStatusCode.Conflict);
+                return new Result<UserDTO>().Failure("Email já cadastrado", null, 409);
 
             var userCreated = User.Create(input.Username, input.Email, input.Password);
 
@@ -65,15 +65,15 @@ public sealed class UserService : IUserService
                 Discriminator = userSaved.Discriminator
             };
 
-            return new Result<UserDTO>().Success("Usuário criado com sucesso", userDTO, System.Net.HttpStatusCode.Created);
+            return new Result<UserDTO>().Success("Usuário criado com sucesso", userDTO, 201);
         }
         catch(InfrastructureException ex)
         {
-            return new Result<UserDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<UserDTO>().Failure(ex.Message, null, 500);
         }
         catch (DomainException ex)
         {
-            return new Result<UserDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<UserDTO>().Failure(ex.Message, null, 400);
         }
     }
 
@@ -83,7 +83,7 @@ public sealed class UserService : IUserService
         {
             var userFound = await _userRepository.GetById(id);
             if (userFound == null)
-                return new Result<UserDTO>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<UserDTO>().Failure("Usuário não encontrado", null, 404);
 
             var taverns = await _tavernRepository.GetAllUserTavernUserAsync(id);
 
@@ -96,15 +96,15 @@ public sealed class UserService : IUserService
                 Taverns = taverns
             };
 
-            return new Result<UserDTO>().Success("Usuário criado com sucesso", userDTO, System.Net.HttpStatusCode.Created);
+            return new Result<UserDTO>().Success("Usuário criado com sucesso", userDTO, 201);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<UserDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<UserDTO>().Failure(ex.Message, null, 500);
         }
         catch (DomainException ex)
         {
-            return new Result<UserDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<UserDTO>().Failure(ex.Message, null, 400);
         }
     }
 
@@ -113,21 +113,21 @@ public sealed class UserService : IUserService
         try
         {
             var allUsersMemberships = await _tavernRepository.GetAllUserMembershipsAsync(id);
-            if (allUsersMemberships.Count <= 0) return new Result<List<TavernDTO>>().Success("Usuário não possui tavernas", new List<TavernDTO>(), System.Net.HttpStatusCode.OK);
+            if (allUsersMemberships.Count <= 0) return new Result<List<TavernDTO>>().Success("Usuário não possui tavernas", new List<TavernDTO>(), 200);
 
-            return new Result<List<TavernDTO>>().Success("", allUsersMemberships, System.Net.HttpStatusCode.OK);
+            return new Result<List<TavernDTO>>().Success("", allUsersMemberships, 200);
         }
         catch (ArgumentException ex)
         {
-            return new Result<List<TavernDTO>>().Failure(ex.Message, null, System.Net.HttpStatusCode.NotFound);
+            return new Result<List<TavernDTO>>().Failure(ex.Message, null, 404);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<List<TavernDTO>>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<List<TavernDTO>>().Failure(ex.Message, null, 500);
         }
         catch (DomainException ex)
         {
-            return new Result<List<TavernDTO>>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<List<TavernDTO>>().Failure(ex.Message, null, 400);
         }
     }
 
@@ -137,7 +137,7 @@ public sealed class UserService : IUserService
         {
             var userFounded = await _userRepository.GetByEmailAsync(input.Email);
             if (userFounded == null)
-                return new Result<UserDTO>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<UserDTO>().Failure("Usuário não encontrado", null, 404);
 
             userFounded.ComparePasswordHash(input.Password);
 
@@ -149,19 +149,19 @@ public sealed class UserService : IUserService
                 Id = userFounded.Id.ToString()
             };
 
-            return new Result<UserDTO>().Success("Usuário logado com sucesso", userDTO, System.Net.HttpStatusCode.OK);
+            return new Result<UserDTO>().Success("Usuário logado com sucesso", userDTO, 200);
         } 
         catch (ArgumentException ex)
         {
-            return new Result<UserDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.NotFound);
+            return new Result<UserDTO>().Failure(ex.Message, null, 404);
         } 
         catch (InfrastructureException ex)
         {
-            return new Result<UserDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<UserDTO>().Failure(ex.Message, null, 500);
         }
         catch (DomainException ex)
         {
-            return new Result<UserDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<UserDTO>().Failure(ex.Message, null, 400);
         }
     }
 }

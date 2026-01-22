@@ -28,21 +28,21 @@ internal sealed class GameDayService : IGameDayService
         try
         {
             var user = await _userRepository.GetById(userId);
-            if (user == null) return new Result<string>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
+            if (user == null) return new Result<string>().Failure("Usuário não encontrado", null, 404);
 
             var tavern = await _tavernRepository.GetById(input.TavernId);
-            if (tavern == null) return new Result<string>().Failure("Taverna não encontrada", null, System.Net.HttpStatusCode.NotFound);
+            if (tavern == null) return new Result<string>().Failure("Taverna não encontrada", null, 404);
 
             var userMembership = await _tavernRepository.GetUserMembershipAsync(user.Id, tavern.Id);
             if (userMembership == null)
-                return new Result<string>().Failure("Usuário não faz parte dessa taverna", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<string>().Failure("Usuário não faz parte dessa taverna", null, 404);
 
             tavern.UserHasPermissionToPerformAction(userMembership);
 
             var gameDayFound = await _tavernRepository.GetGameDayByIdAsync(input.Id);
 
             if (gameDayFound.IsConcluded)
-                return new Result<string>().Failure("O dia de jogo esta concluido, não pode ser reagendado", null, System.Net.HttpStatusCode.Conflict);
+                return new Result<string>().Failure("O dia de jogo esta concluido, não pode ser reagendado", null, 409);
 
             gameDayFound.Reschedule(input.NewDate);
 
@@ -50,16 +50,16 @@ internal sealed class GameDayService : IGameDayService
 
             await _tavernRepository.UpdateGameDayAsync(gameDayFound);
 
-            return new Result<string>().Success("Dia de jogo reagendado com sucesso", null, System.Net.HttpStatusCode.OK);
+            return new Result<string>().Success("Dia de jogo reagendado com sucesso", null, 200);
 
         }
         catch (DomainException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<string>().Failure(ex.Message, null, 400);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<string>().Failure(ex.Message, null, 500);
         }
     }
 
@@ -69,21 +69,21 @@ internal sealed class GameDayService : IGameDayService
         try
         {
             var user = await _userRepository.GetById(userId);
-            if (user == null) return new Result<string>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
+            if (user == null) return new Result<string>().Failure("Usuário não encontrado", null, 404);
 
             var tavern = await _tavernRepository.GetById(input.TavernId);
-            if (tavern == null) return new Result<string>().Failure("Taverna não encontrada", null, System.Net.HttpStatusCode.NotFound);
+            if (tavern == null) return new Result<string>().Failure("Taverna não encontrada", null, 404);
 
             var userMembership = await _tavernRepository.GetUserMembershipAsync(user.Id, tavern.Id);
             if (userMembership == null) 
-                return new Result<string>().Failure("Usuário não faz parte dessa taverna", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<string>().Failure("Usuário não faz parte dessa taverna", null, 404);
 
             tavern.UserHasPermissionToPerformAction(userMembership);
 
             var gameDayFound = await _tavernRepository.GetGameDayByIdAsync(input.Id);
 
             if (gameDayFound.IsConcluded)
-                return new Result<string>().Failure("O dia de jogo já esta concluido", null, System.Net.HttpStatusCode.Conflict);
+                return new Result<string>().Failure("O dia de jogo já esta concluido", null, 409);
 
             gameDayFound.ConcludeGameDay();
 
@@ -93,16 +93,16 @@ internal sealed class GameDayService : IGameDayService
 
             await _tavernRepository.UpdateGameDayAsync(gameDayFound);
 
-            return new Result<string>().Success("Dia de jogo concluido com sucesso", null, System.Net.HttpStatusCode.OK);
+            return new Result<string>().Success("Dia de jogo concluido com sucesso", null, 200);
 
         }
         catch (DomainException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<string>().Failure(ex.Message, null, 400);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<string>().Failure(ex.Message, null, 500);
         }
     }
 
@@ -112,15 +112,15 @@ internal sealed class GameDayService : IGameDayService
         {
             var user = await _userRepository.GetById(userId);
             if (user == null)
-                return new Result<GameDayDTO>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<GameDayDTO>().Failure("Usuário não encontrado", null, 404);
 
             var tavern = await _tavernRepository.GetById(input.TavernId);
             if (tavern == null)
-                return new Result<GameDayDTO>().Failure("Taverna não encontrada", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<GameDayDTO>().Failure("Taverna não encontrada", null, 404);
 
             var userMembership = await _tavernRepository.GetUserMembershipAsync(user.Id, input.TavernId);
             if (userMembership == null)
-                return new Result<GameDayDTO>().Failure("Usuário não pertence a essa taverna", null, System.Net.HttpStatusCode.BadRequest);
+                return new Result<GameDayDTO>().Failure("Usuário não pertence a essa taverna", null, 400);
 
             tavern.UserHasPermissionToPerformAction(userMembership);
 
@@ -136,15 +136,15 @@ internal sealed class GameDayService : IGameDayService
                 Notes = saved.Notes
             };
 
-            return new Result<GameDayDTO>().Success("GameDay criado com sucesso", dto, System.Net.HttpStatusCode.Created);
+            return new Result<GameDayDTO>().Success("GameDay criado com sucesso", dto, 201);
         }
         catch (DomainException ex)
         {
-            return new Result<GameDayDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<GameDayDTO>().Failure(ex.Message, null, 400);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<GameDayDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<GameDayDTO>().Failure(ex.Message, null, 500);
         }
     }
 
@@ -154,7 +154,7 @@ internal sealed class GameDayService : IGameDayService
         {
             var tavern = await _tavernRepository.GetById(tavernId);
             if (tavern == null)
-                return new Result<List<GameDayDTO>>().Failure("Taverna não encontrada", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<List<GameDayDTO>>().Failure("Taverna não encontrada", null, 404);
 
             var gamedays = await _gameDayRepository.GetByTavernIdAsync(tavernId);
 
@@ -167,11 +167,11 @@ internal sealed class GameDayService : IGameDayService
                 IsConcluded = g.IsConcluded
             }).ToList();
 
-            return new Result<List<GameDayDTO>>().Success("", dtoList, System.Net.HttpStatusCode.OK);
+            return new Result<List<GameDayDTO>>().Success("", dtoList, 200);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<List<GameDayDTO>>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<List<GameDayDTO>>().Failure(ex.Message, null, 500);
         }
     }
 
@@ -181,7 +181,7 @@ internal sealed class GameDayService : IGameDayService
         {
             var gameDay = await _gameDayRepository.GetById(id);
             if (gameDay == null)
-                return new Result<GameDayDTO>().Failure("GameDay não encontrado", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<GameDayDTO>().Failure("GameDay não encontrado", null, 404);
 
             var dto = new GameDayDTO
             {
@@ -192,11 +192,11 @@ internal sealed class GameDayService : IGameDayService
                 IsConcluded = gameDay.IsConcluded
             };
 
-            return new Result<GameDayDTO>().Success("", dto, System.Net.HttpStatusCode.OK);
+            return new Result<GameDayDTO>().Success("", dto, 200);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<GameDayDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<GameDayDTO>().Failure(ex.Message, null, 500);
         }
     }
 
@@ -206,33 +206,33 @@ internal sealed class GameDayService : IGameDayService
         {
             var gameDay = await _gameDayRepository.GetById(id);
             if (gameDay == null)
-                return new Result<string>().Failure("GameDay não encontrado", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<string>().Failure("GameDay não encontrado", null, 404);
 
             var tavern = await _tavernRepository.GetById(gameDay.TavernId);
             if (tavern == null)
-                return new Result<string>().Failure("Taverna não encontrada", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<string>().Failure("Taverna não encontrada", null, 404);
 
             var user = await _userRepository.GetById(userId);
             if (user == null)
-                return new Result<string>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<string>().Failure("Usuário não encontrado", null, 404);
 
             var userMembership = await _tavernRepository.GetUserMembershipAsync(user.Id, tavern.Id);
             if (userMembership == null)
-                return new Result<string>().Failure("Usuário não pertence a essa taverna", null, System.Net.HttpStatusCode.BadRequest);
+                return new Result<string>().Failure("Usuário não pertence a essa taverna", null, 400);
 
             tavern.UserHasPermissionToPerformAction(userMembership);
 
             await _gameDayRepository.RemoveAsync(gameDay);
 
-            return new Result<string>().Success("GameDay removido com sucesso", string.Empty, System.Net.HttpStatusCode.OK);
+            return new Result<string>().Success("GameDay removido com sucesso", string.Empty, 200);
         }
         catch (DomainException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<string>().Failure(ex.Message, null, 400);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<string>().Failure(ex.Message, null, 500);
         }
     }
 }

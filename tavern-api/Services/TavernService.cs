@@ -25,21 +25,21 @@ internal sealed class TavernService : ITavernService
         try
         {
             var allUsersMemberships = await _tavernRepository.GetAllUserMembershipsAsync(id);
-            if (allUsersMemberships.Count <= 0) return new Result<List<TavernDTO>>().Success("Usuário não possui tavernas", new List<TavernDTO>(), System.Net.HttpStatusCode.OK);
+            if (allUsersMemberships.Count <= 0) return new Result<List<TavernDTO>>().Success("Usuário não possui tavernas", new List<TavernDTO>(), 200);
 
-            return new Result<List<TavernDTO>>().Success("", allUsersMemberships, System.Net.HttpStatusCode.OK);
+            return new Result<List<TavernDTO>>().Success("", allUsersMemberships, 200);
         }
         catch (ArgumentException ex)
         {
-            return new Result<List<TavernDTO>>().Failure(ex.Message, null, System.Net.HttpStatusCode.NotFound);
+            return new Result<List<TavernDTO>>().Failure(ex.Message, null, 404);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<List<TavernDTO>>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<List<TavernDTO>>().Failure(ex.Message, null, 500);
         }
         catch (DomainException ex)
         {
-            return new Result<List<TavernDTO>>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<List<TavernDTO>>().Failure(ex.Message, null, 400);
         }
     }
 
@@ -48,7 +48,7 @@ internal sealed class TavernService : ITavernService
         try
         {
             var tavernFound = await _tavernRepository.GetById(id);
-            if (tavernFound == null) return new Result<TavernDTO>().Failure("Taverna não encontrada", null, System.Net.HttpStatusCode.NotFound);
+            if (tavernFound == null) return new Result<TavernDTO>().Failure("Taverna não encontrada", null, 404);
 
             var usersInTavern = await _tavernRepository.GetAllTavernUsers(id);
 
@@ -74,16 +74,16 @@ internal sealed class TavernService : ITavernService
                 GameDays = getAllTavernGameDays
             };
 
-            return new Result<TavernDTO>().Success("", tavernDTO, System.Net.HttpStatusCode.OK);
+            return new Result<TavernDTO>().Success("", tavernDTO, 200);
 
         }
         catch (DomainException ex)
         {
-            return new Result<TavernDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<TavernDTO>().Failure(ex.Message, null, 400);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<TavernDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<TavernDTO>().Failure(ex.Message, null, 500);
         }
     }
 
@@ -93,24 +93,24 @@ internal sealed class TavernService : ITavernService
         {
             var userWhoWillBeRemovedInTavern = await _userRepository.GetById(input.UserId);
             if (userWhoWillBeRemovedInTavern == null)
-                return new Result<string>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<string>().Failure("Usuário não encontrado", null, 404);
 
             var userWillRemoveInTavern = await _userRepository.GetById(id);
             if (userWillRemoveInTavern == null)
-                return new Result<string>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<string>().Failure("Usuário não encontrado", null, 404);
 
             var tavernFound = await _tavernRepository.GetById(input.TavernId);
             if (tavernFound == null)
-                return new Result<string>().Failure("Taverna não encontrada", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<string>().Failure("Taverna não encontrada", null, 404);
 
             var allTavernUsers = await _tavernRepository.GetAllTavernUsers(input.TavernId);
 
             if (!allTavernUsers.Select(t => t.Id).Contains(userWhoWillBeRemovedInTavern.Id))
-                return new Result<string>().Failure("Esse usuário não esta na taverna", null, System.Net.HttpStatusCode.Conflict);
+                return new Result<string>().Failure("Esse usuário não esta na taverna", null, 409);
 
             var userMembership = await _tavernRepository.GetUserMembershipAsync(userWillRemoveInTavern.Id, input.TavernId);
             if (userMembership == null)
-                return new Result<string>().Failure("Usuário não pertence a essa taverna", null, System.Net.HttpStatusCode.BadRequest);
+                return new Result<string>().Failure("Usuário não pertence a essa taverna", null, 400);
 
             tavernFound.UserHasPermissionToPerformAction(userMembership);
 
@@ -120,16 +120,16 @@ internal sealed class TavernService : ITavernService
 
             await _tavernRepository.RemoveMembership(membershipToUpdate);
 
-            return new Result<string>().Success("Usuário removido com sucesso", string.Empty, System.Net.HttpStatusCode.Created);
+            return new Result<string>().Success("Usuário removido com sucesso", string.Empty, 201);
 
         }
         catch (DomainException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<string>().Failure(ex.Message, null, 400);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<string>().Failure(ex.Message, null, 500);
         }
     }
 
@@ -139,26 +139,26 @@ internal sealed class TavernService : ITavernService
         {
             var userWhoWillBeAddedInTavern = await _userRepository.GetByNameAndDiscriminator(input.Username, input.Discriminator);
             if (userWhoWillBeAddedInTavern == null)
-                return new Result<string>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<string>().Failure("Usuário não encontrado", null, 404);
 
             var userWillAddInTavern = await _userRepository.GetById(id);
             if (userWillAddInTavern == null)
-                return new Result<string>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<string>().Failure("Usuário não encontrado", null, 404);
 
             var tavernFound = await _tavernRepository.GetById(input.TavernId);
             if (tavernFound == null)
-                return new Result<string>().Failure("Taverna não encontrada", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<string>().Failure("Taverna não encontrada", null, 404);
             
             var allTavernUsers = await _tavernRepository.GetAllTavernUsers(input.TavernId);
 
             if (allTavernUsers.Select(t => t.Id).Contains(userWhoWillBeAddedInTavern.Id))
-                return new Result<string>().Failure("Usuário já está participando desta taverna", null, System.Net.HttpStatusCode.Conflict);
+                return new Result<string>().Failure("Usuário já está participando desta taverna", null, 409);
 
             tavernFound.CanAddUserInTavern(allTavernUsers.Count);
 
             var userMembership = await _tavernRepository.GetUserMembershipAsync(userWillAddInTavern.Id, input.TavernId);
             if (userMembership == null)
-                return new Result<string>().Failure("Usuário não pertence a essa taverna", null, System.Net.HttpStatusCode.BadRequest);
+                return new Result<string>().Failure("Usuário não pertence a essa taverna", null, 400);
 
             tavernFound.UserHasPermissionToPerformAction(userMembership);
 
@@ -166,16 +166,16 @@ internal sealed class TavernService : ITavernService
 
             await _tavernRepository.CreateMembership(newMembership);
 
-            return new Result<string>().Success("Usuário adicionado com sucesso", string.Empty, System.Net.HttpStatusCode.Created);
+            return new Result<string>().Success("Usuário adicionado com sucesso", string.Empty, 201);
         
         }
         catch (DomainException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<string>().Failure(ex.Message, null, 400);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<string>().Failure(ex.Message, null, 500);
         }
     }
 
@@ -185,7 +185,7 @@ internal sealed class TavernService : ITavernService
         {
             var userFound = await _userRepository.GetByEmailAsync(userEmail);
             if (userFound == null)
-                return new Result<TavernDTO>().Failure("Usuário não encontrado.", null, System.Net.HttpStatusCode.NotFound);
+                return new Result<TavernDTO>().Failure("Usuário não encontrado.", null, 404);
 
             var newTavern = Tavern.Create(input.Name, input.Description, input.Capacity);
 
@@ -201,16 +201,16 @@ internal sealed class TavernService : ITavernService
                 Name = tavernSaved.Name,
                 Description = tavernSaved.Description,
                 Capacity = tavernSaved.Capacity
-            }, System.Net.HttpStatusCode.Created);
+            }, 201);
 
         }
         catch(DomainException ex)
         {
-            return new Result<TavernDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.BadRequest);
+            return new Result<TavernDTO>().Failure(ex.Message, null, 400);
         }
         catch(InfrastructureException ex)
         {
-            return new Result<TavernDTO>().Failure(ex.Message, null, System.Net.HttpStatusCode.InternalServerError);
+            return new Result<TavernDTO>().Failure(ex.Message, null, 500);
         }
     }
 }

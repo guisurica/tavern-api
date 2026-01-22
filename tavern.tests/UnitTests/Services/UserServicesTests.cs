@@ -38,7 +38,7 @@ public class UserServicesTests
 
         result.Message.Should().Be("Usuário não encontrado");
         result.Data.Should().Be(null);
-        result.Code.Should().Be(System.Net.HttpStatusCode.NotFound);
+        result.Code.Should().Be(404);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class UserServicesTests
 
         result.Message.Should().Be("Usuário não encontrado");
         result.Data.Should().Be(null);
-        result.Code.Should().Be(System.Net.HttpStatusCode.NotFound);
+        result.Code.Should().Be(404);
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public class UserServicesTests
 
         result.Message.Should().Be("Email já cadastrado");
         result.Data.Should().Be(null);
-        result.Code.Should().Be(System.Net.HttpStatusCode.Conflict);
+        result.Code.Should().Be(409);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class UserServicesTests
 
         result.Data.Should().Be(null);
         result.Message.Should().Be("Usuário não encontrado");
-        result.Code.Should().Be(System.Net.HttpStatusCode.NotFound);
+        result.Code.Should().Be(404);
 
     }
 
@@ -120,7 +120,7 @@ public class UserServicesTests
             .GetByEmailAsync(input.Email);
 
         result.Data.Should().BeOfType<UserDTO>();
-        result.Code.Should().Be(System.Net.HttpStatusCode.Created);
+        result.Code.Should().Be(201);
         result.Message.Should().Be("Usuário criado com sucesso");
     }
 

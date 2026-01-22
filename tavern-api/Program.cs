@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using tavern_api;
 using tavern_api.Commons.Contracts.Repositories;
 using tavern_api.Commons.Contracts.Services;
 using tavern_api.Commons.Contracts.UserContracts;
 using tavern_api.Database;
+using tavern_api.HostedServices;
 using tavern_api.Repositories;
 using tavern_api.Services;
 using tavern_api.Services.UserServices;
@@ -25,12 +25,24 @@ builder.Services.AddCors(options =>
                       });
 });
 
-builder.Services.AddDbContext<TavernDbContext>(opt =>
+if (builder.Environment.EnvironmentName == "IntegrationTests")
 {
-    //opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-    opt.UseSqlite("Data source=tavern.db");
-    opt.UseOpenIddict();
-});
+    builder.Services.AddDbContext<TavernDbContext>(opt =>
+    {
+        opt.UseInMemoryDatabase("IntegrationTestsDatabase");
+    });
+
+    builder.Services.AddHostedService<IntegrationTestsDatabaseSeeder>();
+
+} else if (builder.Environment.IsDevelopment()) 
+{ 
+    builder.Services.AddDbContext<TavernDbContext>(opt =>
+    {
+        //opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+        opt.UseSqlite("Data source=tavern.db");
+        opt.UseOpenIddict();
+    });
+}
 
 builder.Services.AddControllers();
 
@@ -51,7 +63,7 @@ builder.Services.AddOpenIddict()
 
         options.RequireProofKeyForCodeExchange();
 
-        if (builder.Environment.IsDevelopment())
+        if (builder.Environment.IsDevelopment() || builder.Environment.EnvironmentName == "IntegrationTests")
         {
             options.AddDevelopmentEncryptionCertificate()
                    .AddDevelopmentSigningCertificate();
@@ -113,3 +125,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }

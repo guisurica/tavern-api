@@ -1,17 +1,22 @@
 ﻿using System.Net;
+using System.Text.Json.Serialization;
 
 namespace tavern_api.Commons.Responses;
 
 public sealed class Result<T>
 {
-    public string Message { get; private set; } = string.Empty;
-    public T? Data { get; private set; } = default;
-    public HttpStatusCode Code { get; private set; } = HttpStatusCode.OK;
-    public bool IsSuccess { get; private set; } = false;
+    [JsonPropertyName("message")]
+    public string Message { get; set; } = string.Empty;
+    [JsonPropertyName("data")]
+    public T? Data { get; set; } = default;
+    [JsonPropertyName("code")]
+    public int Code { get; set; }
+    [JsonPropertyName("isSuccess")]
+    public bool IsSuccess { get; set; } = false;
 
     public Result() { }
 
-    private Result(string message, T data, HttpStatusCode code, bool isSuccess)
+    private Result(string message, T data, int code, bool isSuccess)
     {
         Data = data;
         Message = message;
@@ -19,12 +24,12 @@ public sealed class Result<T>
         IsSuccess = isSuccess;
     }
 
-    public Result<T> Success(string message, T data, HttpStatusCode code = HttpStatusCode.OK)
+    public Result<T> Success(string message, T data, int code)
     {
         return new Result<T>(message, data, code, true);
     }
 
-    public Result<T> Failure(string message, T data, HttpStatusCode code = HttpStatusCode.OK)
+    public Result<T> Failure(string message, T data, int code)
     {
         return new Result<T>(message, default, code, false);
     }
