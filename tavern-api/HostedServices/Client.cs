@@ -15,13 +15,12 @@ public class Client : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        var unitTestingContext = _serviceProvider.GetRequiredService<TavernDbContext>();
 
-        if (unitTestingContext.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<TavernDbContext>();
+
+        if (context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
         {
-            using var scope = _serviceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<TavernDbContext>();
-
             await context.Database.EnsureCreatedAsync();
 
             var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
