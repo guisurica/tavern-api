@@ -128,4 +128,5 @@ public class UserServicesTests
         result.Code.Should().Be(System.Net.HttpStatusCode.Created);
         result.Message.Should().Be("Usuário criado com sucesso");
     }
+
 }
