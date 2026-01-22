@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="tavern-api/tavern-api.csproj" />
+  <Project Path="tavern.tests/tavern.tests.csproj" Id="27fb159b-a2dc-4c95-b5b0-211a696f06a2" />
 </Solution>

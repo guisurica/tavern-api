@@ -9,7 +9,7 @@ using tavern_api.Entities;
 
 namespace tavern_api.Services;
 
-internal sealed class UserService : IUserService
+public sealed class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly ITavernRepository _tavernRepository;
@@ -25,6 +25,8 @@ internal sealed class UserService : IUserService
         try
         {
             var userFound = await _userRepository.GetById(id);
+            if (userFound == null)
+                return new Result<string>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
 
             userFound.ChangeUsername(input.NewUsername);
 

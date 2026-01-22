@@ -8,7 +8,7 @@ using tavern_api.Entities;
 
 namespace tavern_api.Repositories;
 
-internal sealed class UserRepository : BaseRepository<User>, IUserRepository
+public sealed class UserRepository : BaseRepository<User>, IUserRepository
 {
     private readonly TavernDbContext _context;
 
