@@ -1,23 +1,22 @@
 ﻿using tavern_api.Commons.DTOs;
-using tavern_api.Entities;
 
 namespace tavern.tests.Fixtures;
 
-public static class UserFixtures
+public static class UserServiceFixtures
 {
     public static LoginUserDTO UserWithEmailThatWillBeNotFound = new LoginUserDTO
     {
-        Email = "EmailDoestExists@hotmail.com",
-        Password = "password",
+        Email = "foobar@hotmail.com",
+        Password = "dummypass",
     };
 
     public static string UserThatWilBeNotFoundId = "SomeId";
 
-    public static CreateUserDTO UserWithEmailAlreadyRegistered = new CreateUserDTO 
-    { 
-        Email = "guilherme@hotmail.com",
-        Password = "password",
-        Username = "guilherme"
+    public static CreateUserDTO UserWithEmailAlreadyRegistered = new CreateUserDTO
+    {
+        Email = "foobar@hotmail.com",
+        Password = "dummypass",
+        Username = "foobar"
     };
 
     public static ChangeUsernameDTO UsernameChangeDTO = new ChangeUsernameDTO

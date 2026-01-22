@@ -1,17 +1,12 @@
 ﻿using FluentAssertions;
 using NSubstitute;
+using NSubstitute.ReturnsExtensions;
 using tavern.tests.Fixtures;
 using tavern_api.Commons.Contracts.Repositories;
 using tavern_api.Commons.Contracts.UserContracts;
 using tavern_api.Commons.DTOs;
-using tavern_api.Commons.Responses;
-using tavern_api.Services;
-using System.Net.Http;
-using tavern_api.Repositories;
-using tavern_api.Database;
 using tavern_api.Entities;
-using NSubstitute.ReturnsExtensions;
-using Microsoft.EntityFrameworkCore.Query.Internal;
+using tavern_api.Services;
 
 namespace tavern.tests.Tests.Services;
 
@@ -34,7 +29,7 @@ public class UserServicesTests
     [Fact]
     public async Task LoginUserAsync_Should_ReturnError_UserNotFound()
     {
-        var input = UserFixtures.UserWithEmailThatWillBeNotFound;
+        var input = UserServiceFixtures.UserWithEmailThatWillBeNotFound;
 
         var result = await _userService.LoginUserAsync(input);
 
@@ -49,7 +44,7 @@ public class UserServicesTests
     [Fact]
     public async Task GetUserProfileAsync_Should_ReturnError_UserNotFound()
     {
-        var input = UserFixtures.UserThatWilBeNotFoundId;
+        var input = UserServiceFixtures.UserThatWilBeNotFoundId;
 
         var result = await _userService.GetUserProfileAsync(input);
 
@@ -64,7 +59,7 @@ public class UserServicesTests
     [Fact]
     public async Task CreateUserAsync_Should_ReturnError_EmailAlreadyInUse() 
     {
-        var input = UserFixtures.UserWithEmailAlreadyRegistered;
+        var input = UserServiceFixtures.UserWithEmailAlreadyRegistered;
 
          _userRepositoryMock.GetByEmailAsync(input.Email)
             .Returns(User.Create("guilherme", "guilherme@hotmail.com", "password"));
@@ -82,8 +77,8 @@ public class UserServicesTests
     [Fact]
     public async Task ChangeUsernameAsync_Should_ReturnFailure_UserNotFound()
     {
-        var inputId = UserFixtures.UserThatWilBeNotFoundId;
-        var input = UserFixtures.UsernameChangeDTO;
+        var inputId = UserServiceFixtures.UserThatWilBeNotFoundId;
+        var input = UserServiceFixtures.UsernameChangeDTO;
 
         _userRepositoryMock
             .GetById(inputId)
@@ -103,7 +98,7 @@ public class UserServicesTests
     [Fact]
     public async Task CreateUserAsync_Should_ReturnSuccess_UserCreatedSuccessfully()
     {
-        var input = UserFixtures.CreateUserAsyncSuccessDTO;
+        var input = UserServiceFixtures.CreateUserAsyncSuccessDTO;
         var dummyUserCreated = User.Create(input.Username, input.Email, input.Password);
 
         _userRepositoryMock
