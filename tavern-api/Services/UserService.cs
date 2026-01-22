@@ -134,6 +134,8 @@ internal sealed class UserService : IUserService
         try
         {
             var userFounded = await _userRepository.GetByEmailAsync(input.Email);
+            if (userFounded == null)
+                return new Result<UserDTO>().Failure("Usuário não encontrado", null, System.Net.HttpStatusCode.NotFound);
 
             userFounded.ComparePasswordHash(input.Password);
 
