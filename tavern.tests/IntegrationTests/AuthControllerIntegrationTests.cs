@@ -29,6 +29,8 @@ public class AuthControllerIntegrationTests : IClassFixture<TavernApiFactory<Pro
 
         var result = JsonConvert.DeserializeObject<Result<UserDTO>>(responseString);
 
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
+
         result.Data.Should().NotBe(null);
         result.Code.Should().Be(200);
         result.Message.Should().Be("Usuário logado com sucesso");
@@ -44,6 +46,8 @@ public class AuthControllerIntegrationTests : IClassFixture<TavernApiFactory<Pro
         var responseString = await response.Content.ReadAsStringAsync();
 
         var result = JsonConvert.DeserializeObject<Result<UserDTO>>(responseString);
+
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.Created);
 
         result.Data.Should().NotBe(null);
         result.Code.Should().Be(201);
