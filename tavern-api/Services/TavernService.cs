@@ -1,4 +1,5 @@
-﻿using tavern_api.Commons.Contracts.Repositories;
+﻿using System.Linq;
+using tavern_api.Commons.Contracts.Repositories;
 using tavern_api.Commons.Contracts.Services;
 using tavern_api.Commons.DTOs;
 using tavern_api.Commons.Enums;
@@ -53,7 +54,7 @@ internal sealed class TavernService : ITavernService
             var usersInTavern = await _tavernRepository.GetAllTavernUsers(id);
 
             var getAllTavernGameDays = await _tavernRepository.GetAllTavernGameDaysAsync(id);
-            
+
             var tavernDTO = new TavernDTO
             {
                 Id = tavernFound.Id,
@@ -148,7 +149,7 @@ internal sealed class TavernService : ITavernService
             var tavernFound = await _tavernRepository.GetById(input.TavernId);
             if (tavernFound == null)
                 return new Result<string>().Failure("Taverna não encontrada", null, 404);
-            
+
             var allTavernUsers = await _tavernRepository.GetAllTavernUsers(input.TavernId);
 
             if (allTavernUsers.Select(t => t.Id).Contains(userWhoWillBeAddedInTavern.Id))
@@ -167,7 +168,7 @@ internal sealed class TavernService : ITavernService
             await _tavernRepository.CreateMembership(newMembership);
 
             return new Result<string>().Success("Usuário adicionado com sucesso", string.Empty, 201);
-        
+
         }
         catch (DomainException ex)
         {
@@ -204,11 +205,71 @@ internal sealed class TavernService : ITavernService
             }, 201);
 
         }
-        catch(DomainException ex)
+        catch (DomainException ex)
         {
             return new Result<TavernDTO>().Failure(ex.Message, null, 400);
         }
-        catch(InfrastructureException ex)
+        catch (InfrastructureException ex)
+        {
+            return new Result<TavernDTO>().Failure(ex.Message, null, 500);
+        }
+    }
+
+    public async Task<Result<TavernDTO>> UpdateTavernAsync(UpdateTavernDTO input, string userId)
+    {
+        try
+        {
+            if (input == null || string.IsNullOrWhiteSpace(input.TavernId))
+                return new Result<TavernDTO>().Failure("TavernId obrigatório.", null, 400);
+
+            var tavern = await _tavernRepository.GetById(input.TavernId);
+            if (tavern == null) return new Result<TavernDTO>().Failure("Taverna não encontrada", null, 404);
+
+            var user = await _userRepository.GetById(userId);
+            if (user == null) return new Result<TavernDTO>().Failure("Usuário não encontrado", null, 404);
+
+            var membership = await _tavernRepository.GetUserMembershipAsync(user.Id, tavern.Id);
+            if (membership == null) return new Result<TavernDTO>().Failure("Usuário não pertence a essa taverna", null, 400);
+
+            tavern.UserHasPermissionToPerformAction(membership);
+
+            if (!string.IsNullOrWhiteSpace(input.Name) && input.Name != tavern.Name)
+            {
+                tavern.ChangeName(input.Name);
+            }
+
+            if (input.Description != null && input.Description != tavern.Description)
+            {
+                tavern.ChangeDescription(input.Description);
+            }
+
+            if (input.Capacity.HasValue && input.Capacity.Value != tavern.Capacity)
+            {
+                var currentUsers = await _tavernRepository.GetAllTavernUsers(tavern.Id);
+                if (input.Capacity.Value < currentUsers.Count)
+                    return new Result<TavernDTO>().Failure("Nova capacidade menor que o número atual de usuários na taverna", null, 409);
+
+                tavern.ChangeCapacity(input.Capacity.Value);
+            }
+
+            var updated = await _tavernRepository.UpdateAsync(tavern);
+
+            return new Result<TavernDTO>().Success("Taverna atualizada com sucesso", new TavernDTO
+            {
+                Id = updated.Id,
+                Name = updated.Name,
+                Description = updated.Description,
+                Capacity = updated.Capacity,
+                Level = updated.Level,
+                CurrentExperience = updated.CurrentExperience,
+                LevelExperienceLimit = updated.LevelExperienceLimit
+            }, 200);
+        }
+        catch (DomainException ex)
+        {
+            return new Result<TavernDTO>().Failure(ex.Message, null, 400);
+        }
+        catch (InfrastructureException ex)
         {
             return new Result<TavernDTO>().Failure(ex.Message, null, 500);
         }

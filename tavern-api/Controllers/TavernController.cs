@@ -57,12 +57,12 @@ public class TavernController : ControllerBase
             return Unauthorized("Sua sessão de usuário expirou. Retorne a tela de login para autenticar-se novamente.");
 
         var result = await _tavernService.CreateTavernAsync(input, userEmail);
-        
+
         return StatusCode((int)result.Code, result);
     }
 
     [HttpPost("add-user-tavern")]
-    public async Task<IActionResult> AddUserTavernAsync([FromBody]AddUserTavernDTO input)
+    public async Task<IActionResult> AddUserTavernAsync([FromBody] AddUserTavernDTO input)
     {
         var userClaims = User.Identity as ClaimsIdentity;
 
@@ -88,6 +88,19 @@ public class TavernController : ControllerBase
 
         var result = await _tavernService.RemoveUserTavernAsync(input, userId);
 
+        return StatusCode((int)result.Code, result);
+    }
+
+    [HttpPut("update-tavern")]
+    public async Task<IActionResult> UpdateTavernAsync([FromBody] UpdateTavernDTO input)
+    {
+        var userClaims = User.Identity as ClaimsIdentity;
+        var userId = userClaims?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null || !User.Identity.IsAuthenticated)
+            return Unauthorized("Sua sessão de usuário expirou. Retorne a tela de login para autenticar-se novamente.");
+
+        var result = await _tavernService.UpdateTavernAsync(input, userId);
         return StatusCode((int)result.Code, result);
     }
 }

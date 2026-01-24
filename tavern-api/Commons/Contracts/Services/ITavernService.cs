@@ -10,4 +10,5 @@ public interface ITavernService
     Task<Result<string>> RemoveUserTavernAsync(RemoveUserTavernDTO input, string id);
     Task<Result<TavernDTO>> GetTavernAsync(string id);
     Task<Result<List<TavernDTO>>> GetUserTavernsAsync(string id);
+    Task<Result<TavernDTO>> UpdateTavernAsync(UpdateTavernDTO input, string userId);
 }
