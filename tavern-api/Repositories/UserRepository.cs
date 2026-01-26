@@ -68,4 +68,5 @@ public sealed class UserRepository : BaseRepository<User>, IUserRepository
             throw new InfrastructureException("Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
         }
     }
+
 }

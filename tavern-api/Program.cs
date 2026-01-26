@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using tavern_api.Commons.Configs;
 using tavern_api.Commons.Contracts.Repositories;
 using tavern_api.Commons.Contracts.Services;
 using tavern_api.Commons.Contracts.UserContracts;
@@ -109,6 +110,11 @@ builder.Services.AddTransient<ITavernRepository, TavernRepository>();
 builder.Services.AddTransient<ITavernService, TavernService>();
 builder.Services.AddTransient<IGameDayRepository, GameDayRepository>();
 builder.Services.AddTransient<IGameDayService, GameDayService>();
+builder.Services.AddTransient<IFileService, FileService>();
+builder.Services.AddTransient<IFolderService, FolderService>();
+
+builder.Services.Configure<BaseUrlConfig>(builder.Configuration.GetSection("BaseUrlConfig"));
+builder.Services.Configure<BaseUrlProfileImage>(builder.Configuration.GetSection("BaseUrlProfileImage"));
 
 var app = builder.Build();
 
@@ -116,13 +122,15 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
 app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles();
+app.MapStaticAssets();
 
 app.MapControllers();
+
 
 app.Run();
 

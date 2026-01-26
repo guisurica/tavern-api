@@ -12,10 +12,12 @@ namespace tavern_api.Controllers;
 public class TavernController : ControllerBase
 {
     private readonly ITavernService _tavernService;
+    private readonly IFolderService _folderService;
 
-    public TavernController(ITavernService tavernService)
+    public TavernController(ITavernService tavernService, IFolderService folderService)
     {
         _tavernService = tavernService;
+        _folderService = folderService;
     }
 
     [HttpGet("get-taverns")]
@@ -101,6 +103,20 @@ public class TavernController : ControllerBase
             return Unauthorized("Sua sessão de usuário expirou. Retorne a tela de login para autenticar-se novamente.");
 
         var result = await _tavernService.UpdateTavernAsync(input, userId);
+        return StatusCode((int)result.Code, result);
+    }
+
+
+    [HttpPost("create-folder")]
+    public async Task<IActionResult> CreateFolderAsync(CreateFolderDTO input)
+    {
+        var userClaims = User.Identity as ClaimsIdentity;
+        var userId = userClaims?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null || !User.Identity.IsAuthenticated)
+            return Unauthorized("Sua sessão de usuário expirou. Retorne a tela de login para autenticar-se novamente.");
+
+        var result = await _folderService.CreateFolderAsync(input, userId);
         return StatusCode((int)result.Code, result);
     }
 }

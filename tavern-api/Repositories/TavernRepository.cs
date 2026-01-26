@@ -61,7 +61,9 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
                     Id = m.User.Id,
                     StatusInTavern = m.Status,
                     Username = m.User.Username,
-                    IsDm = m.IsDm
+                    IsDm = m.IsDm,
+                    ProfilePicture = m.User.ProfilePicture,
+                    MembershipId = m.Id
                 })
                 .ToListAsync();
         }
@@ -94,13 +96,38 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
     }
 
-    public async Task<List<TavernUserDTO>> GetAllUserTavernUserAsync(string id)
+    public async Task<List<FolderDTO>> GetAllUsersMembershipFolders(string id)
+    {
+        try
+        {
+            return await _context.Folders
+                .AsNoTracking()
+                .Where(f => f.MembershipId == id)
+                .Select(f => new FolderDTO
+                {
+                    AssignedUserId = f.Membership.UserId,
+                    FolderName = f.FolderName,
+                    MembershipId = f.Membership.Id,
+                    Id = f.Id,
+                    TotalItems = f.Items.Count(),
+                    AssignedUsername = f.Membership.User.Username
+                })
+                .ToListAsync();
+
+        }
+        catch (Exception ex)
+        {
+            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+        }
+    }
+
+    public async Task<List<TavernUserDTO>> GetAllUserTavernUserAsync(string userId)
     {
         try
         {
             return await _context.Memberships
                 .AsNoTracking()
-                .Where(m => m.UserId == id && !m.IsDeleted)
+                .Where(m => m.UserId == userId && !m.IsDeleted)
                 .Select(t => new TavernUserDTO
                 {
                     Name = t.Tavern.Name,
@@ -178,6 +205,21 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
                 .Update(entity);
 
             await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+        }
+    }
+
+    public async Task<Folder> CreateFolderAsync(Folder entity)
+    {
+        try
+        {
+            var folder = await _context.Folders.AddAsync(entity);
+            await _context.SaveChangesAsync();
+
+            return folder.Entity;
         }
         catch (Exception ex)
         {

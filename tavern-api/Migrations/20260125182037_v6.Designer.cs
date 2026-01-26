@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tavern_api.Database;
 
@@ -10,9 +11,11 @@ using tavern_api.Database;
 namespace tavern_api.Migrations
 {
     [DbContext(typeof(TavernDbContext))]
-    partial class TavernDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260125182037_v6")]
+    partial class v6
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
@@ -301,7 +304,6 @@ namespace tavern_api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FolderId")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsDeleted")
@@ -501,13 +503,9 @@ namespace tavern_api.Migrations
 
             modelBuilder.Entity("tavern_api.Entities.Item", b =>
                 {
-                    b.HasOne("tavern_api.Entities.Folder", "Folder")
+                    b.HasOne("tavern_api.Entities.Folder", null)
                         .WithMany("Items")
-                        .HasForeignKey("FolderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Folder");
+                        .HasForeignKey("FolderId");
                 });
 
             modelBuilder.Entity("tavern_api.Entities.Membership", b =>

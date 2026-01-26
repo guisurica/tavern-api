@@ -14,4 +14,8 @@ public interface ITavernRepository : IBaseRepository<Tavern>
     Task<List<TavernGameDaysDTO>> GetAllTavernGameDaysAsync(string id);
     Task<GameDay> GetGameDayByIdAsync(string gameDayId);
     Task UpdateGameDayAsync(GameDay entity);
+
+
+    Task<Folder> CreateFolderAsync(Folder entity);
+    Task<List<FolderDTO>> GetAllUsersMembershipFolders(string id);
 }

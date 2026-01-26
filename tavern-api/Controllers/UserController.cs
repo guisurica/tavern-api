@@ -42,4 +42,17 @@ public class UserController : ControllerBase
         var result = await _userService.GetUserProfileAsync(userId);
         return StatusCode((int)result.Code, result);
     }
+
+    [HttpPut("change-user-image")]
+    public async Task<IActionResult> ChangeUserImageAsync([FromForm] IFormFile file)
+    {
+        var userIdentity = User.Identity as ClaimsIdentity;
+        var userId = userIdentity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null || !User.Identity.IsAuthenticated)
+            return Unauthorized("Sua sessão de usuário expirou. Retorne a tela de login para autenticar-se novamente.");
+
+        var result = await _userService.ChangeUserImageAsync(file, userId);
+        return StatusCode(result.Code, result);
+    }
 }

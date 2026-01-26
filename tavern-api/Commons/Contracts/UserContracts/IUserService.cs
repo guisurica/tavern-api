@@ -10,4 +10,5 @@ public interface IUserService
     public Task<Result<List<TavernDTO>>> GetUserTavernsAsync(string id);
     public Task<Result<string>> ChangeUsernameAsync(ChangeUsernameDTO input, string id);
     public Task<Result<UserDTO>> GetUserProfileAsync(string id);
+    public Task<Result<UserDTO>> ChangeUserImageAsync(IFormFile file, string userId);
 }

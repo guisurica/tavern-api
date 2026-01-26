@@ -55,6 +55,13 @@ internal sealed class TavernService : ITavernService
 
             var getAllTavernGameDays = await _tavernRepository.GetAllTavernGameDaysAsync(id);
 
+            List<FolderDTO> folders = new List<FolderDTO>();
+            foreach(var user in usersInTavern)
+            {
+                var getAllUserMembershipFolders = await _tavernRepository.GetAllUsersMembershipFolders(user.MembershipId);
+                folders.AddRange(getAllUserMembershipFolders);
+            }
+
             var tavernDTO = new TavernDTO
             {
                 Id = tavernFound.Id,
@@ -70,9 +77,11 @@ internal sealed class TavernService : ITavernService
                     Username = u.Username,
                     Discriminator = u.Discriminator,
                     IsDm = u.IsDm,
-                    StatusInTavern = u.StatusInTavern
+                    StatusInTavern = u.StatusInTavern,
+                    ProfilePicture = u.ProfilePicture
                 }).ToList(),
-                GameDays = getAllTavernGameDays
+                GameDays = getAllTavernGameDays,
+                Folders = folders
             };
 
             return new Result<TavernDTO>().Success("", tavernDTO, 200);

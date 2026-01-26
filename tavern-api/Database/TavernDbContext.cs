@@ -9,6 +9,8 @@ public class TavernDbContext : DbContext
     public DbSet<Tavern> Taverns { get; set; }
     public DbSet<Membership> Memberships { get; set; }
     public DbSet<GameDay> GameDays { get; set; }
+    public DbSet<Folder> Folders { get; set; }
+    public DbSet<Item> Items { get; set; }
     public TavernDbContext(DbContextOptions<TavernDbContext> options) : base(options)
     {
     }

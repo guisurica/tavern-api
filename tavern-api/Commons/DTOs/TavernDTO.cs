@@ -11,4 +11,5 @@ public record TavernDTO
     public int LevelExperienceLimit { get; set; }
     public List<UserTavernDTO> Users { get; set; }
     public List<TavernGameDaysDTO> GameDays { get; set; }
+    public List<FolderDTO> Folders { get; set; }
 }

@@ -1,5 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using tavern_api.Commons.Configs;
 using tavern_api.Commons.Contracts.Repositories;
+using tavern_api.Commons.Contracts.Services;
 using tavern_api.Commons.Contracts.UserContracts;
 using tavern_api.Commons.DTOs;
 using tavern_api.Commons.Exceptions;
@@ -13,11 +16,75 @@ public sealed class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly ITavernRepository _tavernRepository;
+    private readonly IFileService _fileService;
 
-    public UserService(IUserRepository userRepository, ITavernRepository tavernRepository)
+    private readonly List<string> FILE_EXTENSIONS_ALLOWED = new()
+    {
+        ".jpg",
+        ".jpeg",
+        ".png"
+    };
+
+    public UserService(IUserRepository userRepository,
+        ITavernRepository tavernRepository, 
+        IFileService fileService)
     {
         _userRepository = userRepository;
         _tavernRepository = tavernRepository;
+        _fileService = fileService;
+    }
+
+    public async Task<Result<UserDTO>> ChangeUserImageAsync(IFormFile file, string userId)
+    {
+        try
+        {
+            if (file.Length <= 0)
+                return new Result<UserDTO>().Failure("Imagem inválida", null, 400);
+
+            var fileExtension = Path.GetExtension(file.FileName).ToLower();
+
+            if (!FILE_EXTENSIONS_ALLOWED.Contains(fileExtension))
+                return new Result<UserDTO>().Failure("Apenas arquivos do tipo JPEG ou PNG são permitidos", null, 400);
+
+            var userFound = await _userRepository.GetById(userId);
+            if (userFound == null)
+                return new Result<UserDTO>().Failure("Usuário não encontrado", null, 404);
+
+            userFound.ValidateProfileImageBytes(file.Length);
+
+            var userNewProfileImage = await _fileService.SaveUserImage(file.OpenReadStream(), fileExtension, userFound.Id);
+
+            userFound.RemoveUserProfilePicture();
+
+            await _userRepository.UpdateAsync(userFound);
+
+            userFound.ChangeUserProfileImage(userNewProfileImage);
+
+            var getAllUserTaverns = await _tavernRepository.GetAllUserTavernUserAsync(userFound.Id);
+
+            var userUpdated = await _userRepository.UpdateAsync(userFound);
+            
+            var userDTOUpdated = new UserDTO
+            {
+                Discriminator = userUpdated.Discriminator,
+                Id = userUpdated.Id,
+                Email = userUpdated.Email,
+                ProfilePicture = userUpdated.ProfilePicture,
+                Taverns = getAllUserTaverns,
+                Username = userUpdated.Username
+            };
+
+        
+            return new Result<UserDTO>().Success("Imagem de perfil atualizada com sucesso", userDTOUpdated, 200);
+        }
+        catch (InfrastructureException ex)
+        {
+            return new Result<UserDTO>().Failure(ex.Message, null, 500);
+        }
+        catch (DomainException ex)
+        {
+            return new Result<UserDTO>().Failure(ex.Message, null, 400);
+        }
     }
 
     public async Task<Result<string>> ChangeUsernameAsync(ChangeUsernameDTO input, string id)

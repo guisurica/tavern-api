@@ -15,6 +15,7 @@ public sealed class User : BaseEntity
         
     public static readonly int MAX_DISCRIMINATOR_ATTEMPTS = 20;
     public static readonly int MAX_DISCRIMINATOR = 10_000;
+    public static readonly int MB_IMAGE_LIMIT = 1048576;
 
     private User() { }
 
@@ -89,6 +90,11 @@ public sealed class User : BaseEntity
 
     #endregion
 
+    public void ChangeUserProfileImage(string profilePictureUrl)
+    {
+        this.ProfilePicture = profilePictureUrl;
+    }
+
     public void ChangeUsername(string newUsername)
     {
         VerifyUsername(newUsername);
@@ -113,6 +119,17 @@ public sealed class User : BaseEntity
 
         if (!BCrypt.Net.BCrypt.Verify(password, this.PasswordHash))
             throw new DomainException("Senha incorreta");
+    }
+
+    public void ValidateProfileImageBytes(long bytes)
+    {
+        if (bytes > MB_IMAGE_LIMIT)
+            throw new DomainException("Tamanho da imagem inválido (máximo de 1MB)");
+    }
+
+    public void RemoveUserProfilePicture()
+    {
+        this.ProfilePicture = null; 
     }
 
 }

@@ -9,4 +9,6 @@ public record UserTavernDTO
     public string Discriminator { get; set; } 
     public MembershipStatus StatusInTavern { get; set; }
     public bool IsDm { get; set; }
+    public string? ProfilePicture { get; set; }
+    public string MembershipId { get; set; }
 }
