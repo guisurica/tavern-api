@@ -1,5 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
+using static OpenIddict.Abstractions.OpenIddictConstants;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace tavern_api.Commons.Responses;
 
@@ -22,6 +24,16 @@ public sealed class Result<T>
         Message = message;
         Code = code;
         IsSuccess = isSuccess;
+    }
+
+    public Result<T> Success(Result<T> response)
+    {
+        return new Result<T>(response.Message, response.Data, response.Code, true);
+    }
+
+    public Result<T> Failure(Result<T> response)
+    {
+        return new Result<T>(response.Message, response.Data, response.Code, false);
     }
 
     public Result<T> Success(string message, T data, int code)

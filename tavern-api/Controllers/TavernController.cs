@@ -119,4 +119,46 @@ public class TavernController : ControllerBase
         var result = await _folderService.CreateFolderAsync(input, userId);
         return StatusCode((int)result.Code, result);
     }
+
+    [HttpPost("create-file")]
+    public async Task<IActionResult> CreateFileAsync(CreateFileDTO input)
+    {
+        var userClaims = User.Identity as ClaimsIdentity;
+        var userId = userClaims?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null || !User.Identity.IsAuthenticated)
+            return Unauthorized("Sua sessão de usuário expirou. Retorne a tela de login para autenticar-se novamente.");
+
+        var result = await _folderService.CreateFileAsync(input, userId);
+        return StatusCode((int)result.Code, result);
+    }
+
+    [HttpGet("download-pdf-file/{itemId}")]
+    public async Task<IActionResult> DownloadPdfFileAsync(string itemId)
+    {
+        var userClaims = User.Identity as ClaimsIdentity;
+        var userId = userClaims?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null || !User.Identity.IsAuthenticated)
+            return Unauthorized("Sua sessão de usuário expirou. Retorne a tela de login para autenticar-se novamente.");
+
+        var result = await _folderService.GetFileBytesAsync(itemId, userId);
+        if (!result.IsSuccess)
+            return StatusCode(result.Code, result);
+
+        return File(result.Data, "application/pdf", itemId + ".pdf");
+    }
+
+    [HttpDelete("delete-file/{itemId}")]
+    public async Task<IActionResult> DeleteFileAsync(string itemId)
+    {
+        var userClaims = User.Identity as ClaimsIdentity;
+        var userId = userClaims?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null || !User.Identity.IsAuthenticated)
+            return Unauthorized("Sua sessão de usuário expirou. Retorne a tela de login para autenticar-se novamente.");
+
+        var result = await _folderService.DeleteFileAsync(itemId, userId);
+        return StatusCode((int)result.Code, result);
+    }
 }

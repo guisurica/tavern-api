@@ -8,4 +8,5 @@ public record FolderDTO
     public string AssignedUsername { get; set; }
     public string AssignedUserId { get; set; }
     public int TotalItems { get; set; }
+    public List<ItemDTO> Items { get; set; }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tavern_api.Database;
 
@@ -10,9 +11,11 @@ using tavern_api.Database;
 namespace tavern_api.Migrations
 {
     [DbContext(typeof(TavernDbContext))]
-    partial class TavernDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260126220829_v8")]
+    partial class v8
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.2");

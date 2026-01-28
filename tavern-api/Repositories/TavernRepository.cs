@@ -100,19 +100,72 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
     {
         try
         {
-            return await _context.Folders
+
+            var folders = await _context.Folders
                 .AsNoTracking()
-                .Where(f => f.MembershipId == id)
-                .Select(f => new FolderDTO
-                {
-                    AssignedUserId = f.Membership.UserId,
-                    FolderName = f.FolderName,
-                    MembershipId = f.Membership.Id,
-                    Id = f.Id,
-                    TotalItems = f.Items.Count(),
-                    AssignedUsername = f.Membership.User.Username
-                })
+                .Where(f => f.MembershipId == id && !f.IsDeleted)
+                .Include(f => f.Items)
+                .Include(f => f.Membership)
+                    .ThenInclude(m => m.User)
+                .Include(f => f.Membership)
+                    .ThenInclude(m => m.Tavern)
                 .ToListAsync();
+
+            var result = folders.Select(f => new FolderDTO
+            {
+                AssignedUserId = f.Membership.UserId,
+                FolderName = f.FolderName,
+                MembershipId = f.Membership.Id,
+                Id = f.Id,
+                TotalItems = f.Items.Count,
+                AssignedUsername = f.Membership.User.Username,
+                Items = f.Items.Where(i => !i.IsDeleted).Select(i => new ItemDTO
+                {
+                    FolderId = f.Id,
+                    FolderName = f.FolderName,
+                    Id = i.Id,
+                    ItemName = i.ItemName,
+                    Size = i.ItemSize,
+                    TavernId = f.Membership.Tavern.Id,
+                    TavernName = f.Membership.Tavern.Name,
+                    UserSignedInId = f.Membership.User.Id,
+                    UserSignedInUsername = f.Membership.User.Username,
+                    Extension = i.Extension,
+                    CreatedAt = i.CreatedAt
+                }).ToList()
+            }).ToList();
+
+            return result;
+
+            // when we change the database, we'll use this approach (SQL SERVER OR POSTGRESQL)
+
+            //return await _context.Folders
+            //    .AsNoTracking()
+            //    .Where(f => f.MembershipId == id)
+            //    .Select(f => new FolderDTO
+            //    {
+            //        AssignedUserId = f.Membership.UserId,
+            //        FolderName = f.FolderName,
+            //        MembershipId = f.Membership.Id,
+            //        Id = f.Id,
+            //        TotalItems = f.Items.Count(),
+            //        AssignedUsername = f.Membership.User.Username,
+            //        Items = f.Items.Select(i => new ItemDTO
+            //        {
+            //            FolderId = f.Id,
+            //            FolderName = f.FolderName,
+            //            Id = i.Id,
+            //            ItemName = i.ItemName,
+            //            Size = i.ItemSize,
+            //            TavernId = f.Membership.Tavern.Id,
+            //            TavernName = f.Membership.Tavern.Name,
+            //            UserSignedInId = f.Membership.User.Id,
+            //            UserSignedInUsername = f.Membership.User.Username,
+            //            Extension = i.Extension,
+            //            CreatedAt = i.CreatedAt
+            //        }).ToList()
+            //    })
+            //    .ToListAsync();
 
         }
         catch (Exception ex)
@@ -224,6 +277,96 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         catch (Exception ex)
         {
             throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+        }
+    }
+
+    public async Task<Item> CreateNewFileAsync(Item entity)
+    {
+        try
+        {
+            var item = await _context.Items.AddAsync(entity);
+            await _context.SaveChangesAsync();
+
+            return item.Entity;
+        }
+        catch (Exception ex)
+        {
+            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+        }
+    }
+
+    public async Task<List<ItemDTO>> GetAllFileInFolderAndTavernAndSignedUser(string folderId)
+    {
+        try
+        {
+            return await _context
+                .Items
+                .AsNoTracking()
+                .Where(i => i.FolderId == folderId && !i.IsDeleted)
+                .Select(i => new ItemDTO
+                {
+                    FolderId = folderId,
+                    FolderName = i.Folder.FolderName,
+                    Id = i.Id,
+                    ItemName = i.ItemName,
+                    Size = i.ItemSize,
+                    TavernId = i.Folder.Membership.TavernId,
+                    TavernName = i.Folder.Membership.Tavern.Name,
+                    UserSignedInId = i.Folder.Membership.Id,
+                    UserSignedInUsername = i.Folder.Membership.User.Username
+                })
+                .ToListAsync();
+        } catch (Exception ex)
+        {
+            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+        }
+    }
+
+    public async Task<Folder> GetFolderByIsAsync(string folderId)
+    {
+        try {
+
+            return await _context
+                .Folders
+                .AsNoTracking()
+                .Where(f => f.Id == folderId && !f.IsDeleted)
+                .FirstOrDefaultAsync();
+
+        } catch (Exception ex)
+        {
+            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde, se persistir, contate o suporte");
+        }
+    }
+
+    public async Task<Item> FindItemByIdAsync(string itemId)
+    {
+        try
+        {
+
+            return await _context.Items
+                .AsNoTracking()
+                .Where(i => i.Id == itemId && !i.IsDeleted)
+                .FirstOrDefaultAsync();
+
+        }
+        catch (Exception ex)
+        {
+            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde, se persistir, contate o suporte");
+        }
+    }
+
+    public async Task RemoveItemFromFolderAsync(Item entity)
+    {
+        try
+        {
+
+            _context.Items.Update(entity);
+            await _context.SaveChangesAsync();
+
+        }
+        catch (Exception ex)
+        {
+            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde, se persistir, contate o suporte");
         }
     }
 }

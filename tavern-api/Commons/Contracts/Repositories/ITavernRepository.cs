@@ -18,4 +18,12 @@ public interface ITavernRepository : IBaseRepository<Tavern>
 
     Task<Folder> CreateFolderAsync(Folder entity);
     Task<List<FolderDTO>> GetAllUsersMembershipFolders(string id);
+    Task<Folder> GetFolderByIsAsync(string folderId);
+
+    Task<Item> CreateNewFileAsync(Item entity);
+    Task<List<ItemDTO>> GetAllFileInFolderAndTavernAndSignedUser(string folderId);
+    Task<Item> FindItemByIdAsync(string itemId);
+    Task RemoveItemFromFolderAsync(Item entity);
+
+
 }

@@ -115,6 +115,7 @@ builder.Services.AddTransient<IFolderService, FolderService>();
 
 builder.Services.Configure<BaseUrlConfig>(builder.Configuration.GetSection("BaseUrlConfig"));
 builder.Services.Configure<BaseUrlProfileImage>(builder.Configuration.GetSection("BaseUrlProfileImage"));
+builder.Services.Configure<BaseTempUrlPath>(builder.Configuration.GetSection("BaseTempUrlPath"));
 
 var app = builder.Build();
 

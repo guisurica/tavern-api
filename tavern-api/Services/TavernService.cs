@@ -6,6 +6,7 @@ using tavern_api.Commons.Enums;
 using tavern_api.Commons.Exceptions;
 using tavern_api.Commons.Responses;
 using tavern_api.Entities;
+using tavern_api.Migrations;
 
 namespace tavern_api.Services;
 
@@ -56,8 +57,11 @@ internal sealed class TavernService : ITavernService
             var getAllTavernGameDays = await _tavernRepository.GetAllTavernGameDaysAsync(id);
 
             List<FolderDTO> folders = new List<FolderDTO>();
-            foreach(var user in usersInTavern)
+            List<ItemDTO> items = new List<ItemDTO>();
+            
+            for(int i = 0; i < usersInTavern.Count; i++)
             {
+                var user = usersInTavern[i];
                 var getAllUserMembershipFolders = await _tavernRepository.GetAllUsersMembershipFolders(user.MembershipId);
                 folders.AddRange(getAllUserMembershipFolders);
             }
