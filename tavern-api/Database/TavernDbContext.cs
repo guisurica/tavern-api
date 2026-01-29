@@ -11,6 +11,10 @@ public class TavernDbContext : DbContext
     public DbSet<GameDay> GameDays { get; set; }
     public DbSet<Folder> Folders { get; set; }
     public DbSet<Item> Items { get; set; }
+    public DbSet<Post> Posts { get; set; }
+    public DbSet<Comment> Comments { get; set; }
+    public DbSet<Like> Likes { get; set; }
+
     public TavernDbContext(DbContextOptions<TavernDbContext> options) : base(options)
     {
     }

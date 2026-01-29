@@ -4,6 +4,8 @@ using tavern_api.Commons.Configs;
 using tavern_api.Commons.Contracts.Services;
 using tavern_api.Commons.Exceptions;
 using tavern_api.Commons.Responses;
+using tavern_api.Entities;
+using tavern_api.Migrations;
 
 namespace tavern_api.Services;
 
@@ -132,6 +134,30 @@ internal sealed class FileService : IFileService
             File.Delete(fullFilePath);
 
             return new Result<string>().Success("Arquivo deletado com sucesso", null, 201);
+
+        }
+        catch (Exception ex)
+        {
+            throw new FileException("Ocorreu um problema com seu arquivo. Tente novamente mais tarde. Se o problema persistir contate o suporte");
+        }
+    }
+
+    public async Task<Result<string>> SaveImageWWWRootUrl(Stream stream, string fileExtension, string idConverted)
+    {
+        try
+        {
+            var fullFileName = idConverted + fileExtension;
+            var folderToSavePostImage = Path.Combine(_env.WebRootPath, "images", "taverns", "posts");
+            var fullFilePath = folderToSavePostImage + "\\" + fullFileName;
+
+            using(var st = new FileStream(fullFilePath, FileMode.Create, FileAccess.ReadWrite))
+            {
+                stream.Position = 0;
+                await stream.CopyToAsync(st);
+            }
+
+            var returnUserProfileImageUrl = $"{_baseUrlConfig.Url}images/taverns/posts/{fullFileName}";
+            return new Result<string>().Success(string.Empty, returnUserProfileImageUrl, 201);
 
         }
         catch (Exception ex)

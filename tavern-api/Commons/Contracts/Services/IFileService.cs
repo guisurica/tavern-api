@@ -11,4 +11,6 @@ public interface IFileService
 
     Task<Result<byte[]>> GetFileBytesAsync(string itemId);
     Task<Result<string>> DeleteItemFromDisk(string itemId);
+
+    Task<Result<string>> SaveImageWWWRootUrl(Stream stream, string fileExtension, string userId);
 }

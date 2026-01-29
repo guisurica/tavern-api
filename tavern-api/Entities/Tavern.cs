@@ -104,7 +104,7 @@ public sealed class Tavern : BaseEntity
     
     private static void VerifyDescription(string? description)
     {
-        if (description != null)
+        if (!string.IsNullOrEmpty(description))
         {
             if (description.Length < 3)
                 throw new DomainException("Nome da taverna deve ter no mínimo 3 caracteres");

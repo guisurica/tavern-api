@@ -59,4 +59,10 @@ public sealed class Folder : BaseEntity
     {
         this.Items.Remove(item);
     }
+
+    public void UserHasPermissionToPermissionActions(Membership membership, string userMembershipId)
+    {
+        if ((!membership.IsDm && this.MembershipId != userMembershipId))
+            throw new DomainException("Usuário não possui permissão para essa pasta");
+    }
 }

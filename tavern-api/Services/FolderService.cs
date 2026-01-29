@@ -75,13 +75,23 @@ internal sealed class FolderService : IFolderService
             if (tavernFound == null)
                 return new Result<string>().Failure("Taverna não encontrada", null, 404);
 
-            var userDungeonMasterFound = await _userRepository.GetById(userId);
-            if (userDungeonMasterFound == null)
+            var userFound = await _userRepository.GetById(userId);
+            if (userFound == null)
                 return new Result<string>().Failure("Usuário não encontrado", null, 404);
 
             var filesInFolder = await _tavernRepository.GetAllFileInFolderAndTavernAndSignedUser(input.FolderId);
             if (filesInFolder.Select(f => f.ItemName + f.Extension).Contains(input.FormFile.FileName))
                 return new Result<string>().Failure("Já existe um arquivo com esse nome nessa pasta", null, 409);
+
+            var userMembershipFound = await _tavernRepository.GetUserMembershipAsync(userFound.Id, tavernFound.Id);
+            if (userMembershipFound == null)
+                return new Result<string>().Failure("Usuário não pertence a essa taverna", null, 404);
+
+            var folderFound = await _tavernRepository.GetFolderByIsAsync(input.FolderId);
+            if (folderFound == null)
+                return new Result<string>().Failure("Pasta não foi encontrada", null, 404);
+
+            folderFound.UserHasPermissionToPermissionActions(userMembershipFound, userMembershipFound.Id);
 
             var newfile = Item.Create(input.FormFile.FileName, Path.GetExtension(input.FormFile.FileName), input.FolderId, input.FormFile.Length);
 

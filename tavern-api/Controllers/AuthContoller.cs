@@ -34,7 +34,13 @@ public class AuthController : ControllerBase
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), new AuthenticationProperties
+        {
+            IsPersistent = true,
+            ExpiresUtc = DateTime.UtcNow.AddDays(1),
+            IssuedUtc = DateTime.UtcNow,
+            AllowRefresh = true,
+        });
 
         return StatusCode((int)result.Code, result);
     }

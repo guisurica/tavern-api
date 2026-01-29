@@ -112,6 +112,8 @@ builder.Services.AddTransient<IGameDayRepository, GameDayRepository>();
 builder.Services.AddTransient<IGameDayService, GameDayService>();
 builder.Services.AddTransient<IFileService, FileService>();
 builder.Services.AddTransient<IFolderService, FolderService>();
+builder.Services.AddTransient<IPostService, PostService>();
+builder.Services.AddTransient<IPostRepository, PostRepository>();
 
 builder.Services.Configure<BaseUrlConfig>(builder.Configuration.GetSection("BaseUrlConfig"));
 builder.Services.Configure<BaseUrlProfileImage>(builder.Configuration.GetSection("BaseUrlProfileImage"));
