@@ -13,15 +13,16 @@ public class Comment : BaseEntity
     
     private Comment() { }
 
-    private Comment(string membershipId, string postId, string commentContent)
+    private Comment(string membershipId, string postId, string commentContent, string? parentCommentId = null)
     {
         MembershipId = membershipId;
         PostId = postId;
         CommentContent = commentContent;
+        ParentCommentId = parentCommentId;
     }
 
-    public static Comment Create(string membershipId, string postId, string commentContent)
+    public static Comment Create(string membershipId, string postId, string commentContent, string? parentCommentId)
     {
-        return new Comment(membershipId, postId, commentContent);
+        return new Comment(membershipId, postId, commentContent, parentCommentId);
     }
 }

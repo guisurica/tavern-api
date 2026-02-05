@@ -119,12 +119,16 @@ internal sealed class TavernService : ITavernService
 
             var allTavernUsers = await _tavernRepository.GetAllTavernUsers(input.TavernId);
 
+
             if (!allTavernUsers.Select(t => t.Id).Contains(userWhoWillBeRemovedInTavern.Id))
                 return new Result<string>().Failure("Esse usuário não esta na taverna", null, 409);
 
             var userMembership = await _tavernRepository.GetUserMembershipAsync(userWillRemoveInTavern.Id, input.TavernId);
             if (userMembership == null)
                 return new Result<string>().Failure("Usuário não pertence a essa taverna", null, 400);
+
+            if (userMembership.IsDm)
+                return new Result<string>().Failure("O DM não pode ser removido da taverna", null, 400);
 
             tavernFound.UserHasPermissionToPerformAction(userMembership);
 

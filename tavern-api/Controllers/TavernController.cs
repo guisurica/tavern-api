@@ -13,11 +13,13 @@ public class TavernController : ControllerBase
 {
     private readonly ITavernService _tavernService;
     private readonly IFolderService _folderService;
-
-    public TavernController(ITavernService tavernService, IFolderService folderService)
+    private readonly IPostService _postService;
+    
+    public TavernController(ITavernService tavernService, IFolderService folderService, IPostService postService)
     {
         _tavernService = tavernService;
         _folderService = folderService;
+        _postService = postService;
     }
 
     [HttpGet("get-taverns")]

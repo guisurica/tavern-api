@@ -6,4 +6,8 @@ public record CommentDTO
     public string? ParentCommentId { get; set; }
     public string UserWhoCommentId { get; set; }
     public string UserWhoCommentUsername { get; set;}
+    public string? UserWhoCommmentProfilePicture { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string PostId { get; set; }
+    public List<CommentDTO> Replies { get; set; }
 }

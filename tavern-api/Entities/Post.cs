@@ -6,7 +6,7 @@ public class Post : BaseEntity
 {
     private const int MinTitleLength = 3;
     private const int MaxTitleLength = 200;
-    private const int MinContentLength = 10;
+    private const int MinContentLength = 5;
     private const int MaxContentLength = 10000;
     private static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png" };
 

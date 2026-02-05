@@ -11,4 +11,8 @@ public interface IPostRepository : IBaseRepository<Post>
     Task UnlikePost(string likeId);
 
     Task<Post> GetPostByIdAsync(string postId);
+    Task<Comment> GetCommentById(string commentId);
+    Task<Comment> CreateCommentAsync(Comment entity);
+    Task<List<CommentDTO>> GetAllPostComments(string postId);
+    Task<List<CommentDTO>> GetCommentRepliesAsync(string commentId);
 } 

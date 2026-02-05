@@ -26,6 +26,61 @@ internal sealed class PostService : IPostService
         _fileService = fileService;
     }
 
+    public async Task<Result<List<CommentDTO>>> CreateCommentAsync(CreateCommentDTO input, string userId)
+    {
+        try
+        {
+            var tavernFound = await _tavernRepository.GetById(input.TavernId);
+            if (tavernFound == null)
+                return new Result<List<CommentDTO>>().Failure("Taverna não encontrada", null, 404);
+
+            var userFound = await _userRepository.GetById(userId);
+            if (userFound == null)
+                return new Result<List<CommentDTO>>().Failure("Usuário não encontrado", null, 404);
+
+            var userMembershipFound = await _tavernRepository.GetUserMembershipAsync(userFound.Id, tavernFound.Id);
+            if (userMembershipFound == null)
+                return new Result<List<CommentDTO>>().Failure("Usuário não pertence a taverna", null, 404);
+
+            var postFound = await _postRepository.GetById(input.PostId);
+            if (postFound == null)
+                return new Result<List<CommentDTO>>().Failure("Postagem não encontrada", null, 404);
+
+            bool isParentComment = false;
+            var parentCommentFound = await _postRepository.GetCommentById(input.ParentCommentId ?? "");
+            if (parentCommentFound != null)
+            {
+                isParentComment = true;
+            }
+
+            Comment newComment = null;
+
+            if (isParentComment)
+            {
+                newComment = Comment.Create(userMembershipFound.Id, postFound.Id, input.CommentContent, parentCommentFound.Id);
+            }
+            else
+            {
+                newComment = Comment.Create(userMembershipFound.Id, postFound.Id, input.CommentContent, null);
+            }
+
+            await _postRepository.CreateCommentAsync(newComment);
+
+            var allPostComments = await _postRepository.GetAllPostComments(postFound.Id);
+
+            return new Result<List<CommentDTO>>().Success(string.Empty, allPostComments, 200);
+
+        }
+        catch (DomainException ex)
+        {
+            return new Result<List<CommentDTO>>().Failure(ex.Message, null, 400);
+        }
+        catch (InfrastructureException ex)
+        {
+            return new Result<List<CommentDTO>>().Failure(ex.Message, null, 500);
+        }
+    }
+
     public async Task<Result<PostDTO>> CreatePostAsync(CreatePostDTO input, string userId)
     {
         try
@@ -60,13 +115,13 @@ internal sealed class PostService : IPostService
                 Comments = new List<CommentDTO>(),
                 Likes = new List<LikeDTO>(),
                 MembershipUserId = post.MembershipId,
-                MembershipUsername = userMembershipFound.User.Username,
+                MembershipUsername = userFound.Username,
                 PostContent = post.Content,
                 PostImageUrl = post.PostImageUrl,
                 PostId = post.Id,
                 PostTitle = post.Title,
                 TavernId = userMembershipFound.TavernId,
-                UserWhoPostedImage = userMembershipFound.User.ProfilePicture
+                UserWhoPostedImage = userFound.ProfilePicture
             };
 
             return new Result<PostDTO>().Success("Post criado com sucesso", postDTO, 200);
@@ -78,6 +133,84 @@ internal sealed class PostService : IPostService
         } catch (InfrastructureException ex)
         {
             return new Result<PostDTO>().Failure(ex.Message, null, 500);
+        }
+    }
+
+    public async Task<Result<PostDTO>> GetPostDetailsAsync(string tavernId, string postId, string userId)
+    {
+        try
+        {
+            var tavernFound = await _tavernRepository.GetById(tavernId);
+            if (tavernFound == null)
+                return new Result<PostDTO>().Failure("Taverna não encontrada", null, 404);
+
+            var userFound = await _userRepository.GetById(userId);
+            if (userFound == null)
+                return new Result<PostDTO>().Failure("Usuário não encontrado", null, 404);
+
+            var postFound = await _postRepository.GetPostByIdAsync(postId);
+            if (postFound == null)
+                return new Result<PostDTO>().Failure("Postagem não encontrada", null, 404);
+
+            var postDTO = new PostDTO
+            {
+                Comments = postFound.Comments
+                .Select(c => new CommentDTO
+                {
+                    CommentContent = c.CommentContent,
+                    CommentId = c.Id,
+                    ParentCommentId = c.ParentCommentId,
+                    UserWhoCommentId = c.Membership.Id,
+                    UserWhoCommentUsername = c.Membership.User.Username,
+                    UserWhoCommmentProfilePicture = c.Membership.User.ProfilePicture,
+                    CreatedAt = c.CreatedAt,
+                    PostId = postFound.Id
+                })
+                .ToList(),
+                Likes = postFound.Likes
+                .Select(l => new LikeDTO
+                {
+                    LikeId = l.Id,
+                    MembershipId = l.Membership.Id,
+                    TavernId = tavernFound.Id,
+                    UserWhoLikedId = l.Membership.User.Id,
+                    UserWhoLikedUsername = l.Membership.User.Username
+                })
+                .ToList(),
+                MembershipUserId = postFound.Membership.UserId,
+                PostContent = postFound.Content,
+                PostId = postFound.Id,
+                MembershipUsername = postFound.Membership.User.Username,
+                PostImageUrl = postFound.PostImageUrl,
+                PostTitle = postFound.Title,
+                TavernId  = tavernFound.Id,
+                UserWhoPostedImage = postFound.Membership.User.ProfilePicture
+            };
+
+            foreach (var comment in postDTO.Comments)
+            {
+                await LoadRepliesRecursivelyAsync(comment);
+            }
+
+            return new Result<PostDTO>().Success(string.Empty, postDTO, 200);
+        }
+        catch (DomainException ex)
+        {
+            return new Result<PostDTO>().Failure(ex.Message, null, 400);
+        }
+        catch (InfrastructureException ex)
+        {
+            return new Result<PostDTO>().Failure(ex.Message, null, 500);
+        }
+    }
+
+    private async Task LoadRepliesRecursivelyAsync(CommentDTO comment)
+    {
+        comment.Replies = await _postRepository.GetCommentRepliesAsync(comment.CommentId);
+
+        foreach (var reply in comment.Replies)
+        {
+            await LoadRepliesRecursivelyAsync(reply);
         }
     }
 
