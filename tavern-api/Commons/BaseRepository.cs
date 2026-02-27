@@ -26,24 +26,39 @@ public abstract class BaseRepository<T> : IBaseRepository<T> where T : BaseEntit
 
         } catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
     public async Task<T> CreateAsync(T entity)
     {
-        var entityValue = await _context.Set<T>().AddAsync(entity);
+        try
+        {
+            var entityValue = await _context.Set<T>().AddAsync(entity);
 
-        await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+            return entityValue.Entity;
 
-        return entityValue.Entity ?? throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+        } catch (Exception ex)
+        {
+            throw new InfrastructureException(ex.Message, ex);
+        }
     }
 
     public async  Task<T> UpdateAsync(T entity)
     {
-        var entityValue =  _context.Set<T>().Update(entity);
-        await _context.SaveChangesAsync();
-        return entityValue.Entity ?? throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+        try
+        {
+            var entityValue = _context.Set<T>().Update(entity);
+
+            await _context.SaveChangesAsync();
+            return entityValue.Entity;
+
+        }
+        catch (Exception ex)
+        {
+            throw new InfrastructureException(ex.Message, ex);
+        }
     }
 
     public async Task RemoveAsync(T entity)
@@ -56,7 +71,7 @@ public abstract class BaseRepository<T> : IBaseRepository<T> where T : BaseEntit
         }
         catch (Exception ex) 
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 }

@@ -29,10 +29,13 @@ public sealed class UserRepository : BaseRepository<User>, IUserRepository
             } catch (DbUpdateException ex) when (IsUniqueViolation.Execute(ex))
             {
                 _context.Users.Entry(entity).State = EntityState.Detached;
+            } catch (Exception ex)
+            {
+                throw new InfrastructureException(ex.Message, ex);
             }
         }
 
-        throw new InfrastructureException("Ocorreu um problema ao criar o usuário. Tente novamente mais tarde. Se persistir, contate o suporte.");
+        throw new InfrastructureException();
     }
 
     public async Task<User> GetByEmailAsync(string email)
@@ -48,7 +51,7 @@ public sealed class UserRepository : BaseRepository<User>, IUserRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException("Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -65,7 +68,7 @@ public sealed class UserRepository : BaseRepository<User>, IUserRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException("Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 

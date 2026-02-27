@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using Serilog;
 using tavern_api.Commons.Contracts.Repositories;
 using tavern_api.Commons.Contracts.Services;
 using tavern_api.Commons.DTOs;
@@ -6,7 +6,6 @@ using tavern_api.Commons.Enums;
 using tavern_api.Commons.Exceptions;
 using tavern_api.Commons.Responses;
 using tavern_api.Entities;
-using tavern_api.Migrations;
 
 namespace tavern_api.Services;
 
@@ -15,32 +14,238 @@ internal sealed class TavernService : ITavernService
 
     private readonly ITavernRepository _tavernRepository;
     private readonly IUserRepository _userRepository;
+    private readonly INotificationRepository _notificationRepository;
 
-    public TavernService(ITavernRepository tavernRepository, IUserRepository userRepository)
+    public TavernService(ITavernRepository tavernRepository, IUserRepository userRepository, INotificationRepository notificationRepository)
     {
         _tavernRepository = tavernRepository;
         _userRepository = userRepository;
+        _notificationRepository = notificationRepository;
+    }
+
+    public async Task<Result<string>> AcceptUserInTavernAsync(AcceptUserInTavernDTO input, string userId)
+    {
+        try
+        {
+            Log.Information("AcceptUserInTavernAsync service starting - {userid}", userId);
+
+            var userWhoWantsEnterTavern = await _userRepository.GetById(input.UserIdWhoWantsEnterTavern);
+            if (userWhoWantsEnterTavern == null)
+            {
+                Log.Warning("AcceptUserInTavernAsync - User who wants enter the tavern not found - {id}", userId);
+
+                return new Result<string>().Failure("Usuário não encontrado", null, 404);
+            }
+
+            var userWhoWillAcceptUserInTavern = await _userRepository.GetByEmailAsync(input.UserWhoWillAcceptsNewUserTavern);
+            if (userWhoWillAcceptUserInTavern == null)
+            {
+                Log.Warning("AcceptUserInTavernAsync - User who will accepts others users in tavern not found - {email}", 
+                    input.UserWhoWillAcceptsNewUserTavern);
+
+                return new Result<string>().Failure("Usuário não encontrado", null, 404);
+            }
+
+            var tavernFound = await _tavernRepository.GetById(input.TavernId);
+            if (tavernFound == null)
+            {
+                Log.Warning("AcceptUserInTavernAsync - Tavern not found - {id}", input.TavernId);
+
+                return new Result<string>().Failure("Taverna não encontrada", null, 404);
+            }
+
+            var usersAlreadyInTavern = await _tavernRepository.GetAllUserMembershipsAsync(tavernFound.Id);
+
+            tavernFound.CanAddUserInTavern(usersAlreadyInTavern.Count());
+
+            var newUserMembership = Membership.Create(tavernFound.Id, userWhoWantsEnterTavern.Id, false, MembershipStatus.COMMON);
+
+            await _tavernRepository.CreateMembership(newUserMembership);
+
+            return new Result<string>().Success("Usuário adicionado a taverna com sucesso", null, 201);
+
+        } catch (InfrastructureException ex)
+        {
+            Log.Error(ex.Message, ex);
+
+            return new Result<string>().Failure("Um erro aconteceu ao tentar concluir sua solicitação. Caso o problema persista, contate o suporte", null, 500);
+        } catch (DomainException ex)
+        {
+            Log.Error(ex.Message, ex);
+
+            return new Result<string>().Failure(ex.Message, null, 500);
+        }
+    }
+
+    public async Task<Result<string>> AskForEnterAsync(AskForEnterDTO input, string userId)
+    {
+        try
+        {
+            Log.Information("AskForEnterAsync - Ask for enter service starting - {id}", userId);
+
+            var userWhoWillReceiveNotification = await _userRepository.GetByEmailAsync(input.ReceriverEmail);
+            if (userWhoWillReceiveNotification == null)
+            {
+                Log.Warning("AskForEnterAsync - Not found receiver user - {email}", input.ReceriverEmail);
+
+                return new Result<string>().Failure("Usuário não encontrado", null, 404);
+            }
+
+            var userWhoWantsToJoinTavern = await _userRepository.GetById(userId);
+            if (userWhoWantsToJoinTavern == null)
+            {
+                Log.Warning("AskForEnterAsync - Not found user who wants to join the tavern - {id}", userId);
+
+                return new Result<string>().Failure("Usuário não encontrado", null, 404);
+            }
+
+            var tavernTheUserWantsToJoin = await _tavernRepository.GetById(input.TavernId);
+            if (tavernTheUserWantsToJoin == null)
+            {
+                Log.Warning("AskForEnterAsync - Not found tavern - {tavernId}", input.TavernId);
+
+                return new Result<string>().Failure("Taverna não encontrada", null, 404);
+            }
+
+            var allUserNotifications = await _notificationRepository.GetAllUserNotification(userId);
+            if (allUserNotifications.Any(n => n.TavernId == tavernTheUserWantsToJoin.Id))
+                return new Result<string>().Failure("Você tem um pedido de entrada pendente para essa taverna. Aguarde até que seja aceito!", null, 400);
+
+            var newNotification = Notification.Create(
+                input.InviteMessage,
+                input.ReceriverEmail,
+                input.TavernId,
+                userId,
+                NotificationType.NewInviteOrder);
+
+            await _notificationRepository.CreateAsync(newNotification);
+
+            return new Result<string>().Success("Notificação enviada com sucesso", userId, 201);
+
+        } catch(InfrastructureException ex)
+        {
+            Log.Error(ex.Message, ex);
+
+            return new Result<string>().Failure("Um erro aconteceu ao tentar concluir sua solicitação. Caso o problema persista, contate o suporte", null, 500);
+
+        }
+        catch (DomainException ex)
+        {
+            Log.Warning(
+                ex,
+                "AskForEnterAsync - Finished - Error"
+            );
+
+            return new Result<string>().Failure(ex.Message, null, 400);
+        }
+    }
+
+    public async Task<Result<List<TavernDTO>>> GetAllApplicationTaverns(string userId, int pageNumber)
+    {
+        try
+        {
+            Log.Information(
+                    "GetAllApplicationTaverns - Starting - {userId} - {pageNumber}",
+                    userId,
+                    pageNumber
+                );
+
+            var userFound = await _userRepository.GetById(userId);
+            if (userFound == null)
+                return new Result<List<TavernDTO>>().Failure("Usuário não encontrado", null, 404);
+
+            var userMemberships = await _tavernRepository.GetAllUserMembershipsAsync(userId);
+
+            var getAllTaverns = await _tavernRepository.GetAllApplicationTavernsAsync(pageNumber);
+
+            var globalTaverns = new List<TavernDTO>();
+
+            FillTavernsWhereUserNotIn(userMemberships, getAllTaverns, globalTaverns);
+
+            if (globalTaverns.Count <= 0)
+                return new Result<List<TavernDTO>>().Success("Não existem tavernas para mostrar", new List<TavernDTO>(), 200);
+
+            return new Result<List<TavernDTO>>().Success("", globalTaverns, 200);
+
+        } catch (DomainException ex)
+        {
+
+            Log.Warning(
+                "GetAllApplicationTaverns - Finished - {userId} - {pageNumber}",
+                userId,
+                pageNumber
+            );
+
+            return new Result<List<TavernDTO>>().Failure(ex.Message, null, 400);
+        } catch (InfrastructureException ex)
+        {
+            Log.Error(
+                ex,
+                "GetAllApplicationTaverns - Finished - Error"
+            );
+
+            return new Result<List<TavernDTO>>().Failure("Um erro aconteceu ao tentar concluir sua solicitação. Caso o problema persista, contate o suporte", null, 500);
+        }
+    }
+
+    private void FillTavernsWhereUserNotIn(
+            List<TavernDTO> userMemberships,
+            List<TavernDTO> getAllTaverns,
+            List<TavernDTO> globalTaverns
+
+        )
+    {
+        if (userMemberships.Count <= 0)
+        {
+            globalTaverns.AddRange(getAllTaverns);
+        } else
+        {
+            for (int i = 0; i < getAllTaverns.Count(); i++)
+            {
+                if (userMemberships[i].Id != getAllTaverns[i].Id)
+                {
+                    globalTaverns.Add(getAllTaverns[i]);
+                }
+            }
+        }
+
     }
 
     public async Task<Result<List<TavernDTO>>> GetUserTavernsAsync(string id)
     {
         try
         {
+            Log.Information(
+                    "GetUserTavernsAsync - Starting - {id}",
+                    id
+                );
+
             var allUsersMemberships = await _tavernRepository.GetAllUserMembershipsAsync(id);
             if (allUsersMemberships.Count <= 0) return new Result<List<TavernDTO>>().Success("Usuário não possui tavernas", new List<TavernDTO>(), 200);
+
+            Log.Information(
+                "GetUserTavernsAsync - Finished - {id}",
+                id
+            );
 
             return new Result<List<TavernDTO>>().Success("", allUsersMemberships, 200);
         }
         catch (ArgumentException ex)
         {
+            Log.Warning(ex, "GetUserTavernsAsync - Warning");
+
             return new Result<List<TavernDTO>>().Failure(ex.Message, null, 404);
         }
         catch (InfrastructureException ex)
         {
+            Log.Error(ex, "GetUserTavernsAsync - Error");
+
             return new Result<List<TavernDTO>>().Failure(ex.Message, null, 500);
         }
         catch (DomainException ex)
         {
+            Log.Warning(ex, "GetUserTavernsAsync - Warning");
+
             return new Result<List<TavernDTO>>().Failure(ex.Message, null, 400);
         }
     }
@@ -49,6 +254,11 @@ internal sealed class TavernService : ITavernService
     {
         try
         {
+            Log.Information(
+                    "GetTavernAsync - Starting - {id}",
+                    id
+                );
+
             var tavernFound = await _tavernRepository.GetById(id);
             if (tavernFound == null) return new Result<TavernDTO>().Failure("Taverna não encontrada", null, 404);
 
@@ -88,15 +298,24 @@ internal sealed class TavernService : ITavernService
                 Folders = folders
             };
 
+            Log.Information(
+                "GetTavernAsync - Finished - {id}",
+                id
+            );
+
             return new Result<TavernDTO>().Success("", tavernDTO, 200);
 
         }
         catch (DomainException ex)
         {
+            Log.Warning(ex, "GetTavernAsync - Warning");
+
             return new Result<TavernDTO>().Failure(ex.Message, null, 400);
         }
         catch (InfrastructureException ex)
         {
+            Log.Error(ex, "GetTavernAsync - Error");
+
             return new Result<TavernDTO>().Failure(ex.Message, null, 500);
         }
     }
@@ -205,7 +424,7 @@ internal sealed class TavernService : ITavernService
             if (userFound == null)
                 return new Result<TavernDTO>().Failure("Usuário não encontrado.", null, 404);
 
-            var newTavern = Tavern.Create(input.Name, input.Description, input.Capacity);
+            var newTavern = Tavern.Create(input.Name, input.Description, input.Capacity, userFound.Email);
 
             var tavernSaved = await _tavernRepository.CreateAsync(newTavern);
 

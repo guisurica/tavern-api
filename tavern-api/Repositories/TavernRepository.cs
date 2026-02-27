@@ -29,7 +29,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -44,7 +44,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
 
         } catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -69,7 +69,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -92,7 +92,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -170,7 +170,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -191,7 +191,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -207,7 +207,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -231,7 +231,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -246,7 +246,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -261,7 +261,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -276,7 +276,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -291,7 +291,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -318,7 +318,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
                 .ToListAsync();
         } catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -334,7 +334,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
 
         } catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde, se persistir, contate o suporte");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -351,7 +351,7 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde, se persistir, contate o suporte");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -366,7 +366,35 @@ public class TavernRepository : BaseRepository<Tavern>, ITavernRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException($"Ocorreu um problema. Tente novamente mais tarde, se persistir, contate o suporte");
+            throw new InfrastructureException(ex.Message, ex);
+        }
+    }
+
+    public async Task<List<TavernDTO>> GetAllApplicationTavernsAsync(int pageNumber)
+    {
+        try
+        {
+
+            var taverns = await _context.Taverns
+                .AsNoTracking()
+                .Where(t => !t.IsDeleted)
+                .Skip((pageNumber - 1) * 10)
+                .Take(10)
+                .Select(t => new TavernDTO
+                {
+                    Description = t.Description,
+                    Name = t.Name,
+                    Id = t.Id,
+                    Capacity = t.Capacity,
+                    UserDmEmail = t.UserDmEmail
+                })
+                .ToListAsync();
+
+            return taverns;
+
+        } catch (InfrastructureException ex)
+        {
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 }

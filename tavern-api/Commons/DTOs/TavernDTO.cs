@@ -9,6 +9,7 @@ public record TavernDTO
     public int Level { get; set; }
     public int CurrentExperience { get; set; }
     public int LevelExperienceLimit { get; set; }
+    public string UserDmEmail { get; set; }
     public List<UserTavernDTO> Users { get; set; }
     public List<TavernGameDaysDTO> GameDays { get; set; }
     public List<FolderDTO> Folders { get; set; }

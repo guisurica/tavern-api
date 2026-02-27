@@ -22,6 +22,47 @@ public class TavernController : ControllerBase
         _postService = postService;
     }
 
+    [HttpPost("accept-user-tavern")]
+    public async Task<IActionResult> AskForEnterAsync([FromBody] AcceptUserInTavernDTO input)
+    {
+        var userIdentity = User.Identity as ClaimsIdentity;
+        var userId = userIdentity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null || !User.Identity.IsAuthenticated)
+            return Unauthorized("Sua sessão de usuário expirou. Retorne a tela de login para autenticar-se novamente.");
+
+        var result = await _tavernService.AcceptUserInTavernAsync(input, userId);
+        return StatusCode((int)result.Code, result);
+
+    }
+
+    [HttpPost("ask-for-enter")]
+    public async Task<IActionResult> AskForEnterAsync([FromBody] AskForEnterDTO input)
+    {
+        var userIdentity = User.Identity as ClaimsIdentity;
+        var userId = userIdentity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null || !User.Identity.IsAuthenticated)
+            return Unauthorized("Sua sessão de usuário expirou. Retorne a tela de login para autenticar-se novamente.");
+
+        var result = await _tavernService.AskForEnterAsync(input, userId);
+        return StatusCode((int)result.Code, result);
+
+    }
+
+    [HttpGet("get-application-taverns")]
+    public async Task<IActionResult> GetUserTavernsAsync([FromQuery] int pageNumber)
+    {
+        var userIdentity = User.Identity as ClaimsIdentity;
+        var userId = userIdentity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null || !User.Identity.IsAuthenticated)
+            return Unauthorized("Sua sessão de usuário expirou. Retorne a tela de login para autenticar-se novamente.");
+
+        var result = await _tavernService.GetAllApplicationTaverns(userId, pageNumber);
+        return StatusCode((int)result.Code, result);
+    }
+
     [HttpGet("get-taverns")]
     public async Task<IActionResult> GetUserTavernsAsync()
     {

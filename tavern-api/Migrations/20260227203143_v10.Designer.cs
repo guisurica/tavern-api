@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tavern_api.Database;
 
@@ -10,9 +11,11 @@ using tavern_api.Database;
 namespace tavern_api.Migrations
 {
     [DbContext(typeof(TavernDbContext))]
-    partial class TavernDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260227203143_v10")]
+    partial class v10
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
@@ -436,51 +439,6 @@ namespace tavern_api.Migrations
                     b.ToTable("Memberships");
                 });
 
-            modelBuilder.Entity("tavern_api.Entities.Notification", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("AlreadySeen")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("NotificationMessage")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("NotificationType")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("TavernId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserReceiverEmail")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TavernId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Notifications");
-                });
-
             modelBuilder.Entity("tavern_api.Entities.Post", b =>
                 {
                     b.Property<string>("Id")
@@ -702,25 +660,6 @@ namespace tavern_api.Migrations
                 });
 
             modelBuilder.Entity("tavern_api.Entities.Membership", b =>
-                {
-                    b.HasOne("tavern_api.Entities.Tavern", "Tavern")
-                        .WithMany()
-                        .HasForeignKey("TavernId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("tavern_api.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tavern");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("tavern_api.Entities.Notification", b =>
                 {
                     b.HasOne("tavern_api.Entities.Tavern", "Tavern")
                         .WithMany()

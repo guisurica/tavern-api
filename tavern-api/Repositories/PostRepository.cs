@@ -27,7 +27,7 @@ internal sealed class PostRepository : BaseRepository<Post>, IPostRepository
             return comment.Entity;
         } catch(Exception ex)
         {
-            throw new InfrastructureException();
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -53,7 +53,7 @@ internal sealed class PostRepository : BaseRepository<Post>, IPostRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException();
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -106,7 +106,7 @@ internal sealed class PostRepository : BaseRepository<Post>, IPostRepository
 
         } catch (Exception ex)
         {
-            throw new InfrastructureException("");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -118,7 +118,7 @@ internal sealed class PostRepository : BaseRepository<Post>, IPostRepository
                 .FirstOrDefaultAsync();
         } catch (Exception ex)
         {
-            throw new InfrastructureException("");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -148,7 +148,7 @@ internal sealed class PostRepository : BaseRepository<Post>, IPostRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException("");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -171,7 +171,7 @@ internal sealed class PostRepository : BaseRepository<Post>, IPostRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException("");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -185,7 +185,7 @@ internal sealed class PostRepository : BaseRepository<Post>, IPostRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException("");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 
@@ -200,7 +200,7 @@ internal sealed class PostRepository : BaseRepository<Post>, IPostRepository
         }
         catch (Exception ex)
         {
-            throw new InfrastructureException("");
+            throw new InfrastructureException(ex.Message, ex);
         }
     }
 }

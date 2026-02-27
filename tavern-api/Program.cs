@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using tavern_api.Commons.Configs;
 using tavern_api.Commons.Contracts.Repositories;
 using tavern_api.Commons.Contracts.Services;
@@ -43,9 +44,16 @@ if (builder.Environment.EnvironmentName == "IntegrationTests")
         opt.UseSqlite("Data source=tavern.db");
         opt.UseOpenIddict();
     });
+} else if (builder.Environment.IsProduction())
+{
+    builder.Services.AddDbContext<TavernDbContext>(opt =>
+    {
+        opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+        opt.UseOpenIddict();
+    });
 }
 
-builder.Services.AddControllers();
+    builder.Services.AddControllers();
 
 builder.Services.AddOpenIddict()
     .AddCore(options =>
@@ -101,6 +109,11 @@ builder.Services
         options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Unspecified;
     });
 
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.File("logs/tavern_logs.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
 builder.Services.AddOpenApi();
 builder.Services.AddHostedService<Client>();
 
@@ -114,6 +127,8 @@ builder.Services.AddTransient<IFileService, FileService>();
 builder.Services.AddTransient<IFolderService, FolderService>();
 builder.Services.AddTransient<IPostService, PostService>();
 builder.Services.AddTransient<IPostRepository, PostRepository>();
+builder.Services.AddTransient<INotificationRepository, NotificationRepository>();
+builder.Services.AddTransient<INotificationService, NotificationService>();
 
 builder.Services.Configure<BaseUrlConfig>(builder.Configuration.GetSection("BaseUrlConfig"));
 builder.Services.Configure<BaseUrlProfileImage>(builder.Configuration.GetSection("BaseUrlProfileImage"));

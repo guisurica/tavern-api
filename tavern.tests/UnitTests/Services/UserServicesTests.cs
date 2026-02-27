@@ -3,6 +3,7 @@ using NSubstitute;
 using NSubstitute.ReturnsExtensions;
 using tavern.tests.Fixtures;
 using tavern_api.Commons.Contracts.Repositories;
+using tavern_api.Commons.Contracts.Services;
 using tavern_api.Commons.Contracts.UserContracts;
 using tavern_api.Commons.DTOs;
 using tavern_api.Entities;
@@ -17,13 +18,15 @@ public class UserServicesTests
 
     private readonly IUserRepository _userRepositoryMock;
     private readonly ITavernRepository _tavernRepositoryMock;
+    private readonly IFileService _fileServiceMock;
 
     public UserServicesTests()
     {
         _userRepositoryMock = Substitute.For<IUserRepository>();
         _tavernRepositoryMock = Substitute.For<ITavernRepository>();
+        _fileServiceMock = Substitute.For<IFileService>();
 
-        _userService = new UserService(_userRepositoryMock, _tavernRepositoryMock);
+        _userService = new UserService(_userRepositoryMock, _tavernRepositoryMock, _fileServiceMock);
     }
 
     [Fact]

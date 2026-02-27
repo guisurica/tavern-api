@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Serilog;
 using tavern_api.Commons.Configs;
 using tavern_api.Commons.Contracts.Repositories;
 using tavern_api.Commons.Contracts.Services;
@@ -38,6 +39,11 @@ public sealed class UserService : IUserService
     {
         try
         {
+            Log.Information(
+                    "ChangeUserImageAsync - starting - {id}",
+                    userId
+                );
+
             if (file.Length <= 0)
                 return new Result<UserDTO>().Failure("Imagem inválida", null, 400);
 
@@ -74,15 +80,25 @@ public sealed class UserService : IUserService
                 Username = userUpdated.Username
             };
 
-        
+            Log.Information(
+                "ChangeUserImageAsync - Finished - {id}",
+                userId
+            );
+
             return new Result<UserDTO>().Success("Imagem de perfil atualizada com sucesso", userDTOUpdated, 200);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<UserDTO>().Failure(ex.Message, null, 500);
+
+            Log.Error(ex, "ChangeUserImageAsync - Error");
+
+            return new Result<UserDTO>().Failure($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.", null, 500);
         }
         catch (DomainException ex)
         {
+
+            Log.Error(ex, "ChangeUserImageAsync - Error");
+
             return new Result<UserDTO>().Failure(ex.Message, null, 400);
         }
     }
@@ -91,6 +107,12 @@ public sealed class UserService : IUserService
     {
         try
         {
+            Log.Information(
+                    "ChangeUsernameAsync - Starting - {id}, {newUsername}",
+                    id,
+                    input.NewUsername
+                );
+
             var userFound = await _userRepository.GetById(id);
             if (userFound == null)
                 return new Result<string>().Failure("Usuário não encontrado", null, 404);
@@ -99,14 +121,24 @@ public sealed class UserService : IUserService
 
             await _userRepository.UpdateAsync(userFound);
 
+            Log.Information(
+                "ChangeUsernameAsync - Finished - {id}, {newUsername}",
+                id,
+                input.NewUsername
+            );
+
             return new Result<string>().Success("Nome de usuário atualizado com sucesso.", string.Empty, 200);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<string>().Failure(ex.Message, null, 500);
+            Log.Error(ex, "ChangeUsernameAsync - Error");
+
+            return new Result<string>().Failure($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.", null, 500);
         }
         catch (DomainException ex)
         {
+            Log.Error(ex, "ChangeUsernameAsync - Error");
+
             return new Result<string>().Failure(ex.Message, null, 400);
         }
     }
@@ -115,6 +147,12 @@ public sealed class UserService : IUserService
     {
         try
         {
+            Log.Information(
+                    "CreateUserAsync - Starting - Email: {emai}, username: {username}",
+                    input.Email,
+                    input.Username
+                );
+
             var userAlreadyExists = await _userRepository.GetByEmailAsync(input.Email);
             if (userAlreadyExists != null) 
                 return new Result<UserDTO>().Failure("Email já cadastrado", null, 409);
@@ -132,14 +170,25 @@ public sealed class UserService : IUserService
                 Discriminator = userSaved.Discriminator
             };
 
+            Log.Information(
+                    "CreateUserAsync - Finished - Email: {emai}, username: {username}",
+                    input.Email,
+                    input.Username
+                );
+
             return new Result<UserDTO>().Success("Usuário criado com sucesso", userDTO, 201);
         }
         catch(InfrastructureException ex)
         {
-            return new Result<UserDTO>().Failure(ex.Message, null, 500);
+
+            Log.Error(ex, "CreateUserAsync - Error");
+
+            return new Result<UserDTO>().Failure($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.", null, 500);
         }
         catch (DomainException ex)
         {
+            Log.Error(ex, "CreateUserAsync - Error");
+
             return new Result<UserDTO>().Failure(ex.Message, null, 400);
         }
     }
@@ -148,6 +197,11 @@ public sealed class UserService : IUserService
     {
         try
         {
+            Log.Information(
+                    "GetUserProfileAsync - Starting - {id}",
+                    id
+                );
+
             var userFound = await _userRepository.GetById(id);
             if (userFound == null)
                 return new Result<UserDTO>().Failure("Usuário não encontrado", null, 404);
@@ -163,14 +217,23 @@ public sealed class UserService : IUserService
                 Taverns = taverns
             };
 
+            Log.Information(
+                "GetUserProfileAsync - Finished - {id}",
+                id
+            );
+
             return new Result<UserDTO>().Success("Usuário criado com sucesso", userDTO, 201);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<UserDTO>().Failure(ex.Message, null, 500);
+            Log.Error(ex, "GetUserProfileAsync - Error");
+
+            return new Result<UserDTO>().Failure($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.", null, 500);
         }
         catch (DomainException ex)
         {
+            Log.Error(ex, "GetUserProfileAsync - Error");
+
             return new Result<UserDTO>().Failure(ex.Message, null, 400);
         }
     }
@@ -178,22 +241,38 @@ public sealed class UserService : IUserService
     public async Task<Result<List<TavernDTO>>> GetUserTavernsAsync(string id)
     {
         try
-        {
+        { 
+            Log.Information(
+                "GetUserTavernsAsync - Starting - {id}",
+                id
+            );
+
             var allUsersMemberships = await _tavernRepository.GetAllUserMembershipsAsync(id);
             if (allUsersMemberships.Count <= 0) return new Result<List<TavernDTO>>().Success("Usuário não possui tavernas", new List<TavernDTO>(), 200);
+
+            Log.Information(
+                "GetUserTavernsAsync - Finished - {id}",
+                id
+            );
 
             return new Result<List<TavernDTO>>().Success("", allUsersMemberships, 200);
         }
         catch (ArgumentException ex)
         {
+            Log.Error(ex, "GetUserTavernsAsync - Error");
+
             return new Result<List<TavernDTO>>().Failure(ex.Message, null, 404);
         }
         catch (InfrastructureException ex)
         {
-            return new Result<List<TavernDTO>>().Failure(ex.Message, null, 500);
+            Log.Error(ex, "GetUserTavernsAsync - Error");
+
+            return new Result<List<TavernDTO>>().Failure($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.", null, 500);
         }
         catch (DomainException ex)
         {
+            Log.Error(ex, "GetUserTavernsAsync - Error");
+
             return new Result<List<TavernDTO>>().Failure(ex.Message, null, 400);
         }
     }
@@ -202,6 +281,11 @@ public sealed class UserService : IUserService
     {
         try
         {
+            Log.Information(
+                    "LoginUserAsync - Starting - {email}",
+                    input.Email
+                );
+
             var userFounded = await _userRepository.GetByEmailAsync(input.Email);
             if (userFounded == null)
                 return new Result<UserDTO>().Failure("Usuário não encontrado", null, 404);
@@ -216,18 +300,30 @@ public sealed class UserService : IUserService
                 Id = userFounded.Id.ToString()
             };
 
+            Log.Information(
+                "LoginUserAsync - Finished - {email}",
+                input.Email
+            );
+
             return new Result<UserDTO>().Success("Usuário logado com sucesso", userDTO, 200);
         } 
         catch (ArgumentException ex)
         {
+            Log.Error(ex, "LoginUserAsync - Error");
+
             return new Result<UserDTO>().Failure(ex.Message, null, 404);
         } 
         catch (InfrastructureException ex)
         {
-            return new Result<UserDTO>().Failure(ex.Message, null, 500);
+
+            Log.Error(ex, "LoginUserAsync - Error");
+
+            return new Result<UserDTO>().Failure($"Ocorreu um problema. Tente novamente mais tarde. Se persistir, contate o suporte.", null, 500);
         }
         catch (DomainException ex)
         {
+            Log.Error(ex, "LoginUserAsync - Error");
+
             return new Result<UserDTO>().Failure(ex.Message, null, 400);
         }
     }

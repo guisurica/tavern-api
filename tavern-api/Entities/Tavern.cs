@@ -14,18 +14,20 @@ public sealed class Tavern : BaseEntity
     public int Experience { get; private set; } = 0;
     public int CurrentExperience { get; private set; } = 0;
     public int LevelExperienceLimit { get; private set; } = 0;
+    public string UserDmEmail { get; private set; } = string.Empty;
     public List<GameDay> GameDays { get; private set; } = new();
 
     private static readonly int TavernLevelLimit = 20;
 
     private Tavern() { }
 
-    private Tavern(string name, string description, int capacity)
+    private Tavern(string name, string description, int capacity, string userDmEmail)
     {
         Name = name;
         Description = description;
         Capacity = capacity;
         LevelExperienceLimit = Level * 100;
+        UserDmEmail = userDmEmail;
     }
 
     public Membership DeleteMembership(Membership membership)
@@ -84,13 +86,13 @@ public sealed class Tavern : BaseEntity
 
     #region Static Methods
     
-    public static Tavern Create(string name, string description, int capacity)
+    public static Tavern Create(string name, string description, int capacity, string userDmEmail)
     {
         VerifyName(name);
         VerifyDescription(description);
         VerifyCapacity(capacity);
 
-        return new Tavern(name, description, capacity);
+        return new Tavern(name, description, capacity, userDmEmail);
     }
     private static void VerifyName(string name)
     {

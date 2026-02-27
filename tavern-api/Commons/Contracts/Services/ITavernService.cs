@@ -11,4 +11,8 @@ public interface ITavernService
     Task<Result<TavernDTO>> GetTavernAsync(string id);
     Task<Result<List<TavernDTO>>> GetUserTavernsAsync(string id);
     Task<Result<TavernDTO>> UpdateTavernAsync(UpdateTavernDTO input, string userId);
+    Task<Result<List<TavernDTO>>> GetAllApplicationTaverns(string userId, int pageNumber);
+    Task<Result<string>> AcceptUserInTavernAsync(AcceptUserInTavernDTO input, string userId);
+
+    Task<Result<string>> AskForEnterAsync(AskForEnterDTO input, string userId);
 }
